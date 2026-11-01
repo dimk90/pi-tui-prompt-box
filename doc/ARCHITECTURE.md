@@ -31,8 +31,8 @@ editor, so the TUI reference is captured there, not in `session_start`.
 `PromptBoxEditor` extends `CustomEditor` and renders the base editor at the
 inner text width. The base output is top border, text lines, bottom border,
 and autocomplete lines. `renderBottomBorder()` returns a marker so `render()`
-can find where the text lines end; both base borders are dropped and replaced
-by half-block rows. Styled content may reset all attributes, so every reset
+can find where the text lines end; both base borders are dropped. The top one
+is replaced by an empty box row, the bottom one by a half-block row. Styled content may reset all attributes, so every reset
 inside a box row is followed by the box background again.
 
 ## State

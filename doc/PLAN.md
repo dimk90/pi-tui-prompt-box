@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] Add `early access` badge on GitHub.
+- [x] Add `early access` badge on GitHub.
   - Reserve name on npm.
   - Don't show it on pi.dev package list till it stable (no pi package tag in the manifest).
 - [ ] Adjust colors to use current pi theme.
@@ -9,12 +9,12 @@
 - [ ] Add padding to the footer to align with the prompt box.
 - [ ] Add padding to the model/tools output to align with the prompt box.
 - [ ] Hide or move model&provider in the footer.
-- [ ] Decide about upper row of the box - should it be full-size?
+- [x] Decide about upper row of the box - should it be full-size?
 - [ ] Adjust padding for autocompletion?
 - [ ] Check the prompt box in Pi's regular TUI mode (`--tui-mode`); adjust it or disable it there.
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
-  - Show them in the half rows or in the status line.
+  - Show them in the padding rows or in the status line.
 - [ ] Show bash mode (input starting with `!`).
   - Pi shows it with `borderColor`, which the box drops.
 - [ ] Handle Pi's editor `paddingX` setting.

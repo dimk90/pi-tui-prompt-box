@@ -45,7 +45,7 @@ export class PromptBoxEditor extends CustomEditor {
 
 		const boxWidth = width - 2 * OUTER_MARGIN - BAR_WIDTH;
 		return [
-			renderHalfRow("╻", "▄", boxWidth),
+			renderBoxRow("", textWidth),
 			...textLines.map((line) => renderBoxRow(line, textWidth)),
 			renderBoxRow("", textWidth),
 			renderBoxRow(truncateToWidth(this.renderStatus(), textWidth, ""), textWidth),
@@ -56,7 +56,7 @@ export class PromptBoxEditor extends CustomEditor {
 }
 
 /**
- * Renders the thin top or bottom edge of the box with half blocks.
+ * Renders the thin bottom edge of the box with half blocks.
  */
 function renderHalfRow(barChar: string, fillChar: string, boxWidth: number): string {
 	const margin = " ".repeat(OUTER_MARGIN);
