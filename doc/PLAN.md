@@ -21,7 +21,7 @@
   - `setEditorComponent` copies it over our `paddingX: 0`, so text gets extra indent inside the box.
   - Ignore it or include it in the width math.
 - [ ] Decide what the status line shows when thinking is off (now `· Off`).
-- [ ] Split `src/index.ts` as described in `doc/ARCHITECTURE.md`.
+- [x] Split `src/index.ts` as described in `doc/ARCHITECTURE.md`.
   - Status line and editor component in separate modules.
 - [ ] Add render tests for the editor.
   - Fallback to the base editor below the minimum width.

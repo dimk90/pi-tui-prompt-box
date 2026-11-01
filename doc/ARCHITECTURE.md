@@ -19,12 +19,12 @@ editor, so the TUI reference is captured there, not in `session_start`.
 
 ## Module Boundaries
 
-| Path           | Responsibility                                                                     |
-| -------------- | ---------------------------------------------------------------------------------- |
-| `src/index.ts` | Proof of concept: factory, handlers, spinner state, status line, editor component. |
-
-Target split, following the project rules: `src/index.ts` keeps the factory and
-closure state, the status line moves and the editor component moves to its own module.
+| Path                          | Responsibility                                                   |
+| ----------------------------- | ---------------------------------------------------------------- |
+| `src/index.ts`                | Wiring: factory, lifecycle handlers, spinner and closure state.  |
+| `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
+| `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, busy spinner. |
+| `src/ui/colors.ts`            | ANSI color codes shared by the box components.                   |
 
 ## Editor Rendering
 
