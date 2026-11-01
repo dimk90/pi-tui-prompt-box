@@ -1,0 +1,47 @@
+{
+	"name": "pi-tui-prompt-box",
+	"version": "0.0.1",
+	"description": "Replaces Pi's prompt editor with a filled box that shows the model, thinking level, and busy state",
+	"type": "module",
+	"license": "MIT",
+	"author": "Dmitry Makarov",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/dimk90/pi-tui-prompt-box.git"
+	},
+	"homepage": "https://github.com/dimk90/pi-tui-prompt-box#readme",
+	"bugs": {
+		"url": "https://github.com/dimk90/pi-tui-prompt-box/issues"
+	},
+	"keywords": [
+		"pi",
+		"pi-extension",
+		"coding-agent"
+	],
+	"engines": {
+		"node": ">=22.19.0"
+	},
+	"files": [
+		"src",
+		"README.md"
+	],
+	"scripts": {
+		"test": "node test/run.ts",
+		"check": "tsc --noEmit && pnpm test"
+	},
+	"pi": {
+		"extensions": [
+			"./src/index.ts"
+		]
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*",
+		"@earendil-works/pi-tui": "*"
+	},
+	"devDependencies": {
+		"@earendil-works/pi-coding-agent": "1.4.0",
+		"@earendil-works/pi-tui": "1.4.0",
+		"@types/node": "^22.20.1",
+		"typescript": "^7.0.2"
+	}
+}

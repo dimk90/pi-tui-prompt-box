@@ -9,7 +9,7 @@
  ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀  
                                                                             
 ```
-─  ───────
+
 Legend:
 
 - ` ` (space) — terminal background, black.
@@ -34,5 +34,5 @@ Legend:
   - `OpenCode` — provider, dim gray.
   - `⠏ Working` -- busy indicator (pi agent)
 
-Colors: terminal `#0a0a0a`, box `#1e1e1e`, bar and `Plan` `#5c9cf5`,
+Colors: terminal `#0a0a0a`, box `#1e1e1e`, bar and `Medium` `#5c9cf5`,
 cursor and model name `#eeeeee`.

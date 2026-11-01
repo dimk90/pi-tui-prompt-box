@@ -1,7 +1,7 @@
 /**
  * Prompt box proof of concept: replaces Pi's main editor with the boxed style from doc/ui.md.
  *
- * Usage: pi -e ./prompt-box.ts
+ * Usage: pi -e .
  */
 
 import {
