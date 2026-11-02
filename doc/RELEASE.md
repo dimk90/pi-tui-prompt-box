@@ -24,7 +24,7 @@ name: no merge into `master`, no tag, and no GitHub release.
    ```
 
 1. Check that `package.json` has version `0.0.1` and replace `Unreleased` for
-   `[v0.0.1]` in `CHANGELOG.md` with the publish date in `DD.MM.YYYY` format.
+   `[0.0.1]` in `CHANGELOG.md` with the publish date in `DD.MM.YYYY` format.
    To keep the proof of concept off the pi.dev package list, leave the
    `pi-package` keyword out of `package.json` until the package is stable.
 
