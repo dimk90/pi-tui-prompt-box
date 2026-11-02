@@ -6,7 +6,7 @@
 - [x] Adjust colors to use current pi theme.
   - Use the editor `borderColor` for the accent bar: Pi sets it from the thinking level.
 - [x] Show thinking effort as lower case - no need to capitalize.
-- [ ] Add padding to the footer to align with the prompt box.
+- [x] Add padding to the footer to align with the prompt box.
 - [ ] Move Pi busy indicator inside the prompt box.
 - [ ] Add padding to the model/tools output to align with the prompt box.
 - [ ] Hide or move model&provider in the footer.

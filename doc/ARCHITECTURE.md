@@ -8,7 +8,8 @@ state, and the required invariants. The look of the box is specified in
 ## Lifecycle
 
 ```text
-session_start    → hide Pi's working indicator, install PromptBoxEditor via setEditorComponent
+session_start    → hide Pi's working indicator, install PromptBoxEditor via setEditorComponent,
+                   wrap Pi's built-in footer in PaddedFooter via setFooter
 agent_start      → start the spinner timer; each tick requests a render
 agent_settled    → stop the spinner; agent_end is too early, Pi may still continue the run
 session_shutdown → stop the spinner, drop the TUI reference; idempotent
@@ -16,6 +17,16 @@ session_shutdown → stop the spinner, drop the TUI reference; idempotent
 
 The editor factory passed to `setEditorComponent` runs when Pi builds the
 editor, so the TUI reference is captured there, not in `session_start`.
+Pi calls it synchronously, so `session_start` can use the reference right
+after `setEditorComponent` returns.
+
+Pi gives extensions no reference to its built-in footer, and `setFooter`
+replaces it. So `session_start` finds the built-in footer in the TUI component
+tree before calling `setFooter`, which removes it from the tree. The footer is
+matched by its `setSession` and `setAutoCompactEnabled` methods, not with
+`instanceof`. If it is not found, for example because another extension
+already replaced it, the footer is left unchanged. Pi restores the built-in
+footer on every extension reload, so each `session_start` finds it again.
 
 ## Module Boundaries
 
@@ -24,6 +35,7 @@ editor, so the TUI reference is captured there, not in `session_start`.
 | `src/index.ts`                | Wiring: factory, lifecycle handlers, spinner and closure state.  |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, busy spinner. |
+| `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved by the box margins.   |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
 
 ## Editor Rendering
@@ -53,3 +65,5 @@ from the context at render time.
 - Normal turns are unchanged: the extension adds nothing to provider requests.
 - The spinner timer never outlives the session.
 - Widths below the box minimum fall back to the base editor rendering.
+- The footer content stays Pi's: `PaddedFooter` only narrows and indents it,
+  and never disposes the built-in footer, which Pi owns.

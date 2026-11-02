@@ -36,5 +36,8 @@ Legend:
   - `!!` input (output kept out of the model context) shows `Bash (no context)`;
     `(no context)` is theme `dim`.
 
+Footer: Pi's built-in footer, below the box, keeps its content but is moved
+right by the box margins, so it starts in the same column as the accent bar.
+
 Colors: terminal `#0a0a0a`, box `#1e1e1e` (fixed, not from the theme).
 All other colors come from the current Pi theme.

@@ -8,8 +8,9 @@ import { type EditorTheme, type TUI, truncateToWidth, visibleWidth } from "@eare
 import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
 import type { BashMode } from "./status-line.ts";
 
-const LEFT_MARGIN = 1;
-const RIGHT_MARGIN = 0;
+/** Terminal columns left empty on each side of the box; the footer uses them too. */
+export const LEFT_MARGIN = 1;
+export const RIGHT_MARGIN = 0;
 const INNER_PADDING = 2;
 const BAR_WIDTH = 1;
 

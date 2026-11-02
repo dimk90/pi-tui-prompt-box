@@ -7,6 +7,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
 
+import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
 import { formatStatus } from "./ui/status-line.ts";
 
@@ -66,5 +67,10 @@ export default function promptBox(pi: ExtensionAPI): void {
 			activeTui = tui;
 			return new PromptBoxEditor(tui, theme, keybindings, renderStatus);
 		});
+
+		// Pi calls the editor factory synchronously, so activeTui is set here in TUI mode only
+		// Search before setFooter(): it removes the current footer from the tree before calling the factory
+		const builtInFooter = activeTui && findBuiltInFooter(activeTui);
+		if (builtInFooter) ctx.ui.setFooter(() => new PaddedFooter(builtInFooter));
 	});
 }
