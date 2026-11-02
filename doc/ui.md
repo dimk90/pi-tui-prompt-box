@@ -5,7 +5,7 @@
  ┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  
  ┃░░█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  
  ┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  
- ┃░░Big░Pickle░OpenCode░·░Medium░░⠏ Working░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  
+ ┃░░Big░Pickle░OpenCode░·░medium░░⠏ Working░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  
  ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀  
                                                                             
 ```
@@ -25,7 +25,7 @@ Legend:
 - The box has no other borders; only the background color separates it from the terminal.
 - Blank line between the input and the status line.
 - Status line:
-  - `Medium` — mode, same color as the accent bar.
+  - `medium` — thinking level as Pi names it (lower case), same color as the accent bar.
   - `·` — separator, theme `dim`.
   - `Big Pickle` — model name, theme `text`.
   - `OpenCode` — provider, theme `dim`.

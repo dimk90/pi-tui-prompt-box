@@ -5,9 +5,9 @@
   - Don't show it on pi.dev package list till it stable (no pi package tag in the manifest).
 - [x] Adjust colors to use current pi theme.
   - Use the editor `borderColor` for the accent bar: Pi sets it from the thinking level.
-- [ ] Show thinking effort as lower case - no need to capitalize.
-- [ ] Move Pi busy indicator inside the prompt box.
+- [x] Show thinking effort as lower case - no need to capitalize.
 - [ ] Add padding to the footer to align with the prompt box.
+- [ ] Move Pi busy indicator inside the prompt box.
 - [ ] Add padding to the model/tools output to align with the prompt box.
 - [ ] Hide or move model&provider in the footer.
 - [x] Decide about upper row of the box - should it be full-size?

@@ -40,13 +40,6 @@ export function formatStatus(options: StatusLineOptions): string {
 		? `${theme.fg("text", model.name)} ${theme.fg("dim", model.provider)}`
 		: theme.fg("dim", "no model");
 	const separator = theme.fg("dim", " · ");
-	const level = levelColor(capitalize(thinkingLevel));
+	const level = levelColor(thinkingLevel);
 	return `${modelText}${separator}${level}${busy}`;
-}
-
-/**
- * Upper-cases the first letter, e.g. "medium" -> "Medium".
- */
-function capitalize(text: string): string {
-	return text.charAt(0).toUpperCase() + text.slice(1);
 }
