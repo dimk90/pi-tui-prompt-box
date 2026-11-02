@@ -52,11 +52,11 @@ export default function promptBox(pi: ExtensionAPI): void {
 		// The box shows its own busy indicator in the status line
 		ctx.ui.setWorkingVisible(false);
 
-		const renderStatus: RenderStatus = (barColor, isBashMode) =>
+		const renderStatus: RenderStatus = (barColor, bashMode) =>
 			formatStatus({
 				theme: ctx.ui.theme,
 				levelColor: barColor,
-				isBashMode,
+				bashMode,
 				model: ctx.model,
 				thinkingLevel: pi.getThinkingLevel(),
 				spinnerFrame: isWorking ? SPINNER_FRAMES[spinnerIndex] : undefined,

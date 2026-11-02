@@ -6,6 +6,7 @@ import { CustomEditor, type KeybindingsManager } from "@earendil-works/pi-coding
 import { type EditorTheme, type TUI, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
+import type { BashMode } from "./status-line.ts";
 
 const OUTER_MARGIN = 1;
 const INNER_PADDING = 2;
@@ -17,7 +18,7 @@ const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
 /**
  * Builds the status line on every render from the editor state Pi does not expose elsewhere.
  */
-export type RenderStatus = (barColor: (text: string) => string, isBashMode: boolean) => string;
+export type RenderStatus = (barColor: (text: string) => string, bashMode: BashMode) => string;
 
 /**
  * Main editor drawn as a filled box with a left accent bar and a status line inside.
@@ -51,9 +52,7 @@ export class PromptBoxEditor extends CustomEditor {
 
 		const boxWidth = width - 2 * OUTER_MARGIN - BAR_WIDTH;
 		const barColor = this.borderColor;
-		// Same rule Pi uses to switch the editor border to the bash mode color
-		const isBashMode = this.getText().trimStart().startsWith("!");
-		const status = truncateToWidth(this.renderStatus(barColor, isBashMode), textWidth, "");
+		const status = truncateToWidth(this.renderStatus(barColor, detectBashMode(this.getText())), textWidth, "");
 		return [
 			renderBoxRow("", textWidth, barColor),
 			...textLines.map((line) => renderBoxRow(line, textWidth, barColor)),
@@ -63,6 +62,16 @@ export class PromptBoxEditor extends CustomEditor {
 			...autocompleteLines.map((line) => " ".repeat(OUTER_MARGIN + BAR_WIDTH + INNER_PADDING) + line),
 		];
 	}
+}
+
+/**
+ * Detects bash mode with Pi's rules: `!` runs a command, `!!` also keeps its output out of the context.
+ */
+function detectBashMode(text: string): BashMode {
+	const input = text.trimStart();
+	if (input.startsWith("!!")) return "no-context";
+	if (input.startsWith("!")) return "context";
+	return "off";
 }
 
 /**

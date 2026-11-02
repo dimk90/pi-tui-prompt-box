@@ -33,6 +33,8 @@ Legend:
 - Bash mode (input starts with `!`): the accent bar uses Pi's bash mode color, and
   the status line shows `Bash` in that color instead of the model, provider, and mode.
   The busy indicator still follows it.
+  - `!!` input (output kept out of the model context) shows `Bash (no context)`;
+    `(no context)` is theme `dim`.
 
 Colors: terminal `#0a0a0a`, box `#1e1e1e` (fixed, not from the theme).
 All other colors come from the current Pi theme.

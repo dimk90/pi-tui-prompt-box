@@ -5,14 +5,21 @@
 import type { ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 
 /**
+ * Bash mode of the input:
+ *   off          a normal prompt
+ *   context      `!` runs a shell command; its output goes to the model context
+ *   no-context   `!!` runs a shell command; its output stays out of the context
+ */
+export type BashMode = "off" | "context" | "no-context";
+
+/**
  * Current state shown in the status line, with the colors to draw it.
  */
 export interface StatusLineOptions {
 	theme: Theme;
 	/** Colors the thinking level or `Bash`; the editor `borderColor`, so it matches the accent bar. */
 	levelColor: (text: string) => string;
-	/** Input starts with `!`: Pi runs it as a shell command, not a model prompt. */
-	isBashMode: boolean;
+	bashMode: BashMode;
 	model: ExtensionContext["model"];
 	thinkingLevel: string;
 	/** Spinner frame of the busy indicator; undefined when the agent is idle. */
@@ -24,9 +31,10 @@ export interface StatusLineOptions {
  * In bash mode, `Bash` replaces the model, provider and thinking level.
  */
 export function formatStatus(options: StatusLineOptions): string {
-	const { theme, levelColor, isBashMode, model, thinkingLevel, spinnerFrame } = options;
+	const { theme, levelColor, bashMode, model, thinkingLevel, spinnerFrame } = options;
 	const busy = spinnerFrame ? theme.fg("dim", `  ${spinnerFrame} Working`) : "";
-	if (isBashMode) return `${levelColor("Bash")}${busy}`;
+	if (bashMode === "context") return `${levelColor("Bash")}${busy}`;
+	if (bashMode === "no-context") return `${levelColor("Bash")}${theme.fg("dim", " (no context)")}${busy}`;
 
 	const modelText = model
 		? `${theme.fg("text", model.name)} ${theme.fg("dim", model.provider)}`
