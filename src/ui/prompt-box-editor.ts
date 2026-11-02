@@ -8,7 +8,8 @@ import { type EditorTheme, type TUI, truncateToWidth, visibleWidth } from "@eare
 import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
 import type { BashMode } from "./status-line.ts";
 
-const OUTER_MARGIN = 1;
+const LEFT_MARGIN = 1;
+const RIGHT_MARGIN = 0;
 const INNER_PADDING = 2;
 const BAR_WIDTH = 1;
 
@@ -41,7 +42,7 @@ export class PromptBoxEditor extends CustomEditor {
 	}
 
 	override render(width: number): string[] {
-		const textWidth = width - 2 * OUTER_MARGIN - BAR_WIDTH - 2 * INNER_PADDING;
+		const textWidth = width - LEFT_MARGIN - RIGHT_MARGIN - BAR_WIDTH - 2 * INNER_PADDING;
 		if (textWidth < 1) return super.render(width);
 
 		// Base layout: top border, text lines, bottom border, autocomplete lines
@@ -50,7 +51,7 @@ export class PromptBoxEditor extends CustomEditor {
 		const textLines = baseLines.slice(1, bottomBorderIndex);
 		const autocompleteLines = baseLines.slice(bottomBorderIndex + 1);
 
-		const boxWidth = width - 2 * OUTER_MARGIN - BAR_WIDTH;
+		const boxWidth = width - LEFT_MARGIN - RIGHT_MARGIN - BAR_WIDTH;
 		const barColor = this.borderColor;
 		const status = truncateToWidth(this.renderStatus(barColor, detectBashMode(this.getText())), textWidth, "");
 		return [
@@ -59,7 +60,7 @@ export class PromptBoxEditor extends CustomEditor {
 			renderBoxRow("", textWidth, barColor),
 			renderBoxRow(status, textWidth, barColor),
 			renderHalfRow("╹", "▀", boxWidth, barColor),
-			...autocompleteLines.map((line) => " ".repeat(OUTER_MARGIN + BAR_WIDTH + INNER_PADDING) + line),
+			...autocompleteLines.map((line) => " ".repeat(LEFT_MARGIN + BAR_WIDTH + INNER_PADDING) + line),
 		];
 	}
 }
@@ -83,18 +84,20 @@ function renderHalfRow(
 	boxWidth: number,
 	barColor: (text: string) => string,
 ): string {
-	const margin = " ".repeat(OUTER_MARGIN);
-	return `${margin}${barColor(barChar)}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${margin}`;
+	const leftMargin = " ".repeat(LEFT_MARGIN);
+	const rightMargin = " ".repeat(RIGHT_MARGIN);
+	return `${leftMargin}${barColor(barChar)}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${rightMargin}`;
 }
 
 /**
  * Renders one full-height box row: accent bar, padding and content on the box background.
  */
 function renderBoxRow(content: string, textWidth: number, barColor: (text: string) => string): string {
-	const margin = " ".repeat(OUTER_MARGIN);
+	const leftMargin = " ".repeat(LEFT_MARGIN);
+	const rightMargin = " ".repeat(RIGHT_MARGIN);
 	const padding = " ".repeat(INNER_PADDING);
 	const fill = " ".repeat(Math.max(0, textWidth - visibleWidth(content)));
 	// Styled content may reset all attributes, which would also drop the box background
 	const boxedContent = content.replaceAll(RESET, RESET + BOX_BG);
-	return `${margin}${barColor("┃")}${RESET}${BOX_BG}${padding}${boxedContent}${fill}${padding}${RESET}${margin}`;
+	return `${leftMargin}${barColor("┃")}${RESET}${BOX_BG}${padding}${boxedContent}${fill}${padding}${RESET}${rightMargin}`;
 }
