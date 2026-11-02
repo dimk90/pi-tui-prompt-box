@@ -71,6 +71,8 @@ export default function promptBox(pi: ExtensionAPI): void {
 		// Pi calls the editor factory synchronously, so activeTui is set here in TUI mode only
 		// Search before setFooter(): it removes the current footer from the tree before calling the factory
 		const builtInFooter = activeTui && findBuiltInFooter(activeTui);
-		if (builtInFooter) ctx.ui.setFooter(() => new PaddedFooter(builtInFooter));
+		if (!builtInFooter) return;
+		const readModelState = () => ({ model: ctx.model, thinkingLevel: pi.getThinkingLevel() });
+		ctx.ui.setFooter(() => new PaddedFooter(builtInFooter, readModelState));
 	});
 }

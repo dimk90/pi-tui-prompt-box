@@ -7,9 +7,10 @@
   - Use the editor `borderColor` for the accent bar: Pi sets it from the thinking level.
 - [x] Show thinking effort as lower case - no need to capitalize.
 - [x] Add padding to the footer to align with the prompt box.
+- [x] Hide or move model&provider from the footer.
+  - Only in Pi's built-in footer; custom footers hide their own parts.
 - [ ] Move Pi busy indicator inside the prompt box.
 - [ ] Add padding to the model/tools output to align with the prompt box.
-- [ ] Hide or move model&provider in the footer.
 - [x] Decide about upper row of the box - should it be full-size?
 - [ ] Adjust padding for autocompletion?
 - [ ] Check the prompt box in Pi's regular TUI mode (`--tui-mode`); adjust it or disable it there.
@@ -57,3 +58,6 @@
 - [ ] Handle other extensions that call `setEditorComponent`: only the last one wins.
   - Document it in the README or detect it.
 - [ ] Configurable status line: choose which parts to show (e.g. hide the provider).
+- [ ] Show the routed model (`→ model`) in the status line.
+  - Pi's footer keeps its model part for routed models, as the text does not match.
+  - Add mock demo with virtual/routed model.

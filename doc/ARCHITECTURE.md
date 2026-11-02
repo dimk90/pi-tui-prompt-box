@@ -28,6 +28,14 @@ matched by its `setSession` and `setAutoCompactEnabled` methods, not with
 already replaced it, the footer is left unchanged. Pi restores the built-in
 footer on every extension reload, so each `session_start` finds it again.
 
+The box status line already shows the model, so `PaddedFooter` removes the
+model part that Pi right-aligns on the footer stats line (second line):
+`(provider) model-id • level`. It builds that text from `ctx.model` and the
+thinking level, as Pi does, and cuts it only when the stats line ends with it
+after at least two spaces. Otherwise the line stays unchanged, for example
+when Pi truncated it, shows a routed model, or changed its format. Custom
+footers from other extensions are never wrapped; hiding their parts is their job.
+
 ## Module Boundaries
 
 | Path                          | Responsibility                                                   |
@@ -35,7 +43,7 @@ footer on every extension reload, so each `session_start` finds it again.
 | `src/index.ts`                | Wiring: factory, lifecycle handlers, spinner and closure state.  |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, busy spinner. |
-| `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved by the box margins.   |
+| `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed.  |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
 
 ## Editor Rendering
@@ -65,5 +73,7 @@ from the context at render time.
 - Normal turns are unchanged: the extension adds nothing to provider requests.
 - The spinner timer never outlives the session.
 - Widths below the box minimum fall back to the base editor rendering.
-- The footer content stays Pi's: `PaddedFooter` only narrows and indents it,
-  and never disposes the built-in footer, which Pi owns.
+- The footer content stays Pi's: `PaddedFooter` only narrows and indents it
+  and removes the exactly matched model part, and never disposes the built-in
+  footer, which Pi owns.
+- Custom footers set by other extensions are never changed.

@@ -38,6 +38,9 @@ Legend:
 
 Footer: Pi's built-in footer, below the box, keeps its content but is moved
 right by the box margins, so it starts in the same column as the accent bar.
+The model part on the right of its stats line (`(provider) model • level`) is
+removed, as the status line already shows it. A routed model (`→ …`) stays.
+Custom footers from other extensions are left unchanged.
 
 Colors: terminal `#0a0a0a`, box `#1e1e1e` (fixed, not from the theme).
 All other colors come from the current Pi theme.
