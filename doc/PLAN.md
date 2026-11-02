@@ -5,6 +5,7 @@
   - Don't show it on pi.dev package list till it stable (no pi package tag in the manifest).
 - [x] Adjust colors to use current pi theme.
   - Use the editor `borderColor` for the accent bar: Pi sets it from the thinking level.
+- [ ] Show thinking effort as lower case - no need to capitalize.
 - [ ] Move Pi busy indicator inside the prompt box.
 - [ ] Add padding to the footer to align with the prompt box.
 - [ ] Add padding to the model/tools output to align with the prompt box.
@@ -15,7 +16,7 @@
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
   - Show them in the padding rows or in the status line.
-- [ ] Show bash mode (input starting with `!`).
+- [x] Show bash mode (input starting with `!`).
   - Pi shows it with `borderColor`, which the box drops.
 - [ ] Handle Pi's editor `paddingX` setting.
   - `setEditorComponent` copies it over our `paddingX: 0`, so text gets extra indent inside the box.
@@ -38,6 +39,9 @@
   - demo: switch thinking effort;
   - demo: bash mode;
   - demo: spinner;
+- [ ] Issue: exit from regular mode leave black gap in place of cursor.
+  - See `doc/issue-1.png`.
+
 
 
 # Backlog

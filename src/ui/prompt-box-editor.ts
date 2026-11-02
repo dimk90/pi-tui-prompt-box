@@ -15,6 +15,11 @@ const BAR_WIDTH = 1;
 const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
 
 /**
+ * Builds the status line on every render from the editor state Pi does not expose elsewhere.
+ */
+export type RenderStatus = (barColor: (text: string) => string, isBashMode: boolean) => string;
+
+/**
  * Main editor drawn as a filled box with a left accent bar and a status line inside.
  *
  * The base editor renders the text lines; this class replaces its borders and
@@ -23,14 +28,9 @@ const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
  * uses `borderColor`, which Pi sets from the thinking level and bash mode.
  */
 export class PromptBoxEditor extends CustomEditor {
-	private readonly renderStatus: (levelColor: (text: string) => string) => string;
+	private readonly renderStatus: RenderStatus;
 
-	constructor(
-		tui: TUI,
-		theme: EditorTheme,
-		keybindings: KeybindingsManager,
-		renderStatus: (levelColor: (text: string) => string) => string,
-	) {
+	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager, renderStatus: RenderStatus) {
 		super(tui, theme, keybindings, { paddingX: 0 });
 		this.renderStatus = renderStatus;
 	}
@@ -51,7 +51,9 @@ export class PromptBoxEditor extends CustomEditor {
 
 		const boxWidth = width - 2 * OUTER_MARGIN - BAR_WIDTH;
 		const barColor = this.borderColor;
-		const status = truncateToWidth(this.renderStatus(barColor), textWidth, "");
+		// Same rule Pi uses to switch the editor border to the bash mode color
+		const isBashMode = this.getText().trimStart().startsWith("!");
+		const status = truncateToWidth(this.renderStatus(barColor, isBashMode), textWidth, "");
 		return [
 			renderBoxRow("", textWidth, barColor),
 			...textLines.map((line) => renderBoxRow(line, textWidth, barColor)),

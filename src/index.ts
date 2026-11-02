@@ -7,7 +7,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
 
-import { PromptBoxEditor } from "./ui/prompt-box-editor.ts";
+import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
 import { formatStatus } from "./ui/status-line.ts";
 
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -52,10 +52,11 @@ export default function promptBox(pi: ExtensionAPI): void {
 		// The box shows its own busy indicator in the status line
 		ctx.ui.setWorkingVisible(false);
 
-		const renderStatus = (levelColor: (text: string) => string) =>
+		const renderStatus: RenderStatus = (barColor, isBashMode) =>
 			formatStatus({
 				theme: ctx.ui.theme,
-				levelColor,
+				levelColor: barColor,
+				isBashMode,
 				model: ctx.model,
 				thinkingLevel: pi.getThinkingLevel(),
 				spinnerFrame: isWorking ? SPINNER_FRAMES[spinnerIndex] : undefined,

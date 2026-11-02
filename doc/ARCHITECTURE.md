@@ -37,7 +37,9 @@ inside a box row is followed by the box background again.
 
 The accent bar and the thinking level use the editor `borderColor`. Pi
 copies it to the editor and updates it when the thinking level or bash mode
-changes, so the box never computes it. The status line reads the other colors
+changes, so the box never computes it. Bash mode for the status line is
+checked with Pi's rule: the input, without leading whitespace, starts with
+`!`. The status line reads the other colors
 from `ctx.ui.theme` at render time, so theme changes apply on the next render.
 
 ## State
