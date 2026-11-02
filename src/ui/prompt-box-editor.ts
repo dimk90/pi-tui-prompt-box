@@ -5,7 +5,7 @@
 import { CustomEditor, type KeybindingsManager } from "@earendil-works/pi-coding-agent";
 import { type EditorTheme, type TUI, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
-import { ACCENT_FG, BOX_BG, BOX_FG, RESET } from "./colors.ts";
+import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
 
 const OUTER_MARGIN = 1;
 const INNER_PADDING = 2;
@@ -19,12 +19,18 @@ const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
  *
  * The base editor renders the text lines; this class replaces its borders and
  * wraps every line in the box background. `renderStatus` is called on every
- * render, so the status line always shows the current state.
+ * render, so the status line always shows the current state. The accent bar
+ * uses `borderColor`, which Pi sets from the thinking level and bash mode.
  */
 export class PromptBoxEditor extends CustomEditor {
-	private readonly renderStatus: () => string;
+	private readonly renderStatus: (levelColor: (text: string) => string) => string;
 
-	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager, renderStatus: () => string) {
+	constructor(
+		tui: TUI,
+		theme: EditorTheme,
+		keybindings: KeybindingsManager,
+		renderStatus: (levelColor: (text: string) => string) => string,
+	) {
 		super(tui, theme, keybindings, { paddingX: 0 });
 		this.renderStatus = renderStatus;
 	}
@@ -44,12 +50,14 @@ export class PromptBoxEditor extends CustomEditor {
 		const autocompleteLines = baseLines.slice(bottomBorderIndex + 1);
 
 		const boxWidth = width - 2 * OUTER_MARGIN - BAR_WIDTH;
+		const barColor = this.borderColor;
+		const status = truncateToWidth(this.renderStatus(barColor), textWidth, "");
 		return [
-			renderBoxRow("", textWidth),
-			...textLines.map((line) => renderBoxRow(line, textWidth)),
-			renderBoxRow("", textWidth),
-			renderBoxRow(truncateToWidth(this.renderStatus(), textWidth, ""), textWidth),
-			renderHalfRow("╹", "▀", boxWidth),
+			renderBoxRow("", textWidth, barColor),
+			...textLines.map((line) => renderBoxRow(line, textWidth, barColor)),
+			renderBoxRow("", textWidth, barColor),
+			renderBoxRow(status, textWidth, barColor),
+			renderHalfRow("╹", "▀", boxWidth, barColor),
 			...autocompleteLines.map((line) => " ".repeat(OUTER_MARGIN + BAR_WIDTH + INNER_PADDING) + line),
 		];
 	}
@@ -58,19 +66,24 @@ export class PromptBoxEditor extends CustomEditor {
 /**
  * Renders the thin bottom edge of the box with half blocks.
  */
-function renderHalfRow(barChar: string, fillChar: string, boxWidth: number): string {
+function renderHalfRow(
+	barChar: string,
+	fillChar: string,
+	boxWidth: number,
+	barColor: (text: string) => string,
+): string {
 	const margin = " ".repeat(OUTER_MARGIN);
-	return `${margin}${ACCENT_FG}${barChar}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${margin}`;
+	return `${margin}${barColor(barChar)}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${margin}`;
 }
 
 /**
  * Renders one full-height box row: accent bar, padding and content on the box background.
  */
-function renderBoxRow(content: string, textWidth: number): string {
+function renderBoxRow(content: string, textWidth: number, barColor: (text: string) => string): string {
 	const margin = " ".repeat(OUTER_MARGIN);
 	const padding = " ".repeat(INNER_PADDING);
 	const fill = " ".repeat(Math.max(0, textWidth - visibleWidth(content)));
 	// Styled content may reset all attributes, which would also drop the box background
 	const boxedContent = content.replaceAll(RESET, RESET + BOX_BG);
-	return `${margin}${ACCENT_FG}┃${RESET}${BOX_BG}${padding}${boxedContent}${fill}${padding}${RESET}${margin}`;
+	return `${margin}${barColor("┃")}${RESET}${BOX_BG}${padding}${boxedContent}${fill}${padding}${RESET}${margin}`;
 }

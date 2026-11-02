@@ -24,7 +24,7 @@ editor, so the TUI reference is captured there, not in `session_start`.
 | `src/index.ts`                | Wiring: factory, lifecycle handlers, spinner and closure state.  |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, busy spinner. |
-| `src/ui/colors.ts`            | ANSI color codes shared by the box components.                   |
+| `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
 
 ## Editor Rendering
 
@@ -34,6 +34,11 @@ and autocomplete lines. `renderBottomBorder()` returns a marker so `render()`
 can find where the text lines end; both base borders are dropped. The top one
 is replaced by an empty box row, the bottom one by a half-block row. Styled content may reset all attributes, so every reset
 inside a box row is followed by the box background again.
+
+The accent bar and the thinking level use the editor `borderColor`. Pi
+copies it to the editor and updates it when the thinking level or bash mode
+changes, so the box never computes it. The status line reads the other colors
+from `ctx.ui.theme` at render time, so theme changes apply on the next render.
 
 ## State
 

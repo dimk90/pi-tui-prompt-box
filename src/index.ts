@@ -52,10 +52,15 @@ export default function promptBox(pi: ExtensionAPI): void {
 		// The box shows its own busy indicator in the status line
 		ctx.ui.setWorkingVisible(false);
 
-		const renderStatus = () => {
-			const spinnerFrame = isWorking ? SPINNER_FRAMES[spinnerIndex] : undefined;
-			return formatStatus(ctx.model, pi.getThinkingLevel(), spinnerFrame);
-		};
+		const renderStatus = (levelColor: (text: string) => string) =>
+			formatStatus({
+				theme: ctx.ui.theme,
+				levelColor,
+				model: ctx.model,
+				thinkingLevel: pi.getThinkingLevel(),
+				spinnerFrame: isWorking ? SPINNER_FRAMES[spinnerIndex] : undefined,
+			});
+
 		ctx.ui.setEditorComponent((tui, theme, keybindings) => {
 			activeTui = tui;
 			return new PromptBoxEditor(tui, theme, keybindings, renderStatus);

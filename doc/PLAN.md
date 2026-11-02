@@ -3,7 +3,7 @@
 - [x] Add `early access` badge on GitHub.
   - Reserve name on npm.
   - Don't show it on pi.dev package list till it stable (no pi package tag in the manifest).
-- [ ] Adjust colors to use current pi theme.
+- [x] Adjust colors to use current pi theme.
   - Use the editor `borderColor` for the accent bar: Pi sets it from the thinking level.
 - [ ] Move Pi busy indicator inside the prompt box.
 - [ ] Add padding to the footer to align with the prompt box.
@@ -23,6 +23,8 @@
 - [ ] Decide what the status line shows when thinking is off (now `· Off`).
 - [x] Split `src/index.ts` as described in `doc/ARCHITECTURE.md`.
   - Status line and editor component in separate modules.
+- [ ] Dynamic background brightening function for prompt box:
+  - background[prompt-box] = brighten(theme.background)
 - [ ] Add render tests for the editor.
   - Fallback to the base editor below the minimum width.
   - Box background restored after every reset.
@@ -32,7 +34,10 @@
 - [ ] Add a lifecycle test: the spinner timer stops on `session_shutdown` without `agent_settled`.
 - [ ] Fix `doc/ui.md`.
   - Terminal background is the user's, not always black.
-- [ ] Add a demo GIF (S-VHS) and logo to the README.
+- [ ] Add a demo GIF (S-VHS) and logo to the README:
+  - demo: switch thinking effort;
+  - demo: bash mode;
+  - demo: spinner;
 
 
 # Backlog
