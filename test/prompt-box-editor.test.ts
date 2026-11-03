@@ -7,6 +7,7 @@ import { type EditorTheme, stripTerminalSequences, truncateToWidth, type TUI } f
 import { PromptBoxEditor } from "../src/ui/prompt-box-editor.ts";
 
 type StatusIndicator = NonNullable<Parameters<PromptBoxEditor["setWorkingStatusIndicator"]>[0]>;
+type StatusIndicatorKind = StatusIndicator["kind"];
 
 // Box columns around the text: left margin, accent bar and inner padding on both sides
 const BOX_COLUMNS = 6;
@@ -15,18 +16,32 @@ test("PromptBoxEditor shows Pi's busy indicator after the status line text", () 
 	const editor = createEditor();
 	assert.equal(renderStatusRow(editor, 40), "model");
 
-	editor.setWorkingStatusIndicator(createIndicator("⠋", "Working"));
-	assert.equal(renderStatusRow(editor, 40), "model  ⠋ Working");
+	editor.setWorkingStatusIndicator(createIndicator("retry", "⠋", "Retrying"));
+	assert.equal(renderStatusRow(editor, 40), "model  ⠋ Retrying");
 
 	editor.setWorkingStatusIndicator(undefined);
 	assert.equal(renderStatusRow(editor, 40), "model");
 });
 
+test("PromptBoxEditor shows only the spinner for Pi's default working message", () => {
+	const editor = createEditor();
+	for (const message of ["Working", "Working (escape to interrupt)"]) {
+		editor.setWorkingStatusIndicator(createIndicator("working", "⠋", message));
+		assert.equal(renderStatusRow(editor, 60), "model  ⠋");
+	}
+
+	editor.setWorkingStatusIndicator(createIndicator("working", "⠋", "Reading files"));
+	assert.equal(renderStatusRow(editor, 60), "model  ⠋ Reading files");
+
+	editor.setWorkingStatusIndicator(createIndicator("working", "", "Working"));
+	assert.equal(renderStatusRow(editor, 60), "model  Working");
+});
+
 test("PromptBoxEditor cuts the indicator message, then the text, but keeps the spinner", () => {
 	const editor = createEditor();
-	editor.setWorkingStatusIndicator(createIndicator("⠋", "Working"));
+	editor.setWorkingStatusIndicator(createIndicator("retry", "⠋", "Retrying"));
 
-	assert.equal(renderStatusRow(editor, BOX_COLUMNS + 12), "model  ⠋ Wor");
+	assert.equal(renderStatusRow(editor, BOX_COLUMNS + 12), "model  ⠋ Ret");
 	assert.equal(renderStatusRow(editor, BOX_COLUMNS + 6), "mod  ⠋");
 });
 
@@ -42,9 +57,10 @@ function createEditor(): PromptBoxEditor {
 /**
  * Creates a fixed busy indicator that renders like Pi's: spinner, space, message cut to the width.
  */
-function createIndicator(spinner: string, message: string): StatusIndicator {
+function createIndicator(kind: StatusIndicatorKind, spinner: string, message: string): StatusIndicator {
 	const indicator = {
-		renderInBorder: (width: number) => truncateToWidth(`${spinner} ${message}`, width, ""),
+		kind,
+		renderInBorder: (width: number) => truncateToWidth(spinner ? `${spinner} ${message}` : message, width, ""),
 		renderSpinnerInBorder: (width: number) => truncateToWidth(spinner, width, ""),
 	};
 	return indicator as unknown as StatusIndicator;

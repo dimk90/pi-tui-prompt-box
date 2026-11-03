@@ -3,7 +3,7 @@
  */
 
 import { CustomEditor, type KeybindingsManager } from "@earendil-works/pi-coding-agent";
-import { type EditorTheme, type TUI, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { type EditorTheme, stripTerminalSequences, type TUI, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
 import type { BashMode } from "./status-line.ts";
@@ -15,6 +15,10 @@ const INNER_PADDING = 2;
 const BAR_WIDTH = 1;
 // Spaces between the status line text and Pi's busy indicator
 const BUSY_GAP = 2;
+// Pi's default working message, also with the interrupt hint Pi adds after an extension reload
+const DEFAULT_WORKING_MESSAGE = /^Working( \(.+ to interrupt\))?$/;
+// Wide enough for the default working message; Pi pads the rendered indicator to this width
+const MESSAGE_CHECK_WIDTH = 200;
 
 // Returned by renderBottomBorder() so render() can find where the text lines end
 const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
@@ -82,6 +86,7 @@ export class PromptBoxEditor extends CustomEditor {
 	/**
 	 * Renders the status line text followed by Pi's busy indicator, if any, within `textWidth`.
 	 * The text is cut first so the spinner always fits; the indicator message is cut as Pi does in its border.
+	 * Pi's default working message is dropped, so a normal turn shows only the spinner.
 	 */
 	private renderStatusLine(textWidth: number, barColor: (text: string) => string): string {
 		const text = this.renderStatus(barColor, detectBashMode(this.getText()));
@@ -92,9 +97,25 @@ export class PromptBoxEditor extends CustomEditor {
 		const fittedText = truncateToWidth(text, Math.max(0, textWidth - BUSY_GAP - spinnerWidth), "");
 		const busyWidth = textWidth - visibleWidth(fittedText) - BUSY_GAP;
 		if (busyWidth < 1) return fittedText;
-		const busy = indicator.renderInBorder(busyWidth);
+		const busy = hasDefaultWorkingMessage(indicator)
+			? indicator.renderSpinnerInBorder(busyWidth)
+			: indicator.renderInBorder(busyWidth);
 		return truncateToWidth(`${fittedText}${" ".repeat(BUSY_GAP)}${busy}`, textWidth, "");
 	}
+}
+
+/**
+ * Checks if the indicator shows Pi's default working message, which the box hides to show only the spinner.
+ * Pi keeps the message private, so it is read from the rendered indicator.
+ * An indicator without a spinner keeps its message, so it never disappears.
+ */
+function hasDefaultWorkingMessage(indicator: StatusIndicator): boolean {
+	if (indicator.kind !== "working") return false;
+	const spinner = stripTerminalSequences(indicator.renderSpinnerInBorder(MESSAGE_CHECK_WIDTH));
+	if (!spinner) return false;
+	const rendered = stripTerminalSequences(indicator.renderInBorder(MESSAGE_CHECK_WIDTH));
+	const message = rendered.startsWith(`${spinner} `) ? rendered.slice(spinner.length + 1) : rendered;
+	return DEFAULT_WORKING_MESSAGE.test(message);
 }
 
 /**

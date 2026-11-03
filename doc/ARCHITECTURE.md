@@ -70,6 +70,12 @@ keeps a reference and draws it after the status line text. The text is cut
 first so the spinner fits; the rest of the indicator is cut to the remaining
 width with `renderInBorder()`.
 
+For a `working` indicator with Pi's default message (`Working`, or
+`Working (<key> to interrupt)` after an extension reload), only the spinner is
+drawn. Pi keeps the message private, so it is read from the rendered indicator
+without the spinner. Custom messages and other indicator kinds are drawn in
+full, as is an indicator without a spinner frame.
+
 ## State
 
 No extension state; nothing is persisted. The editor keeps Pi's current status

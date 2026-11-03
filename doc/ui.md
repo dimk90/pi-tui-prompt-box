@@ -5,7 +5,7 @@
  ┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
  ┃░░█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
  ┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
- ┃░░Big░Pickle░OpenCode░·░medium░░⠏ Working░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+ ┃░░Big░Pickle░OpenCode░·░medium░░⠏░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
  ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ 
                                                                             
 ```
@@ -29,8 +29,10 @@ Legend:
   - `·` — separator, theme `dim`.
   - `Big Pickle` — model name, theme `text`.
   - `OpenCode` — provider, theme `dim`.
-  - `⠏ Working` — Pi's busy indicator, two spaces after the text: working,
+  - `⠏` — Pi's busy indicator, two spaces after the text: working,
     retry, compaction, or branch summary, with the message other extensions set.
+    Pi's default working message (`Working`) is dropped, so a normal turn shows
+    only the spinner; other messages stay.
     Pi colors it: working and compaction in the accent bar color, retry in `warning`.
     When the line is too narrow, the text is cut first, then the indicator
     message; the spinner stays.

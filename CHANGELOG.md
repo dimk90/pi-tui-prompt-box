@@ -9,6 +9,7 @@
 * `[ui]` Indent Pi's footer by the box margin so it starts in the same column as the box
 * `[ui]` Remove the model and provider from Pi's built-in footer; the box shows them
 * `[ui]` Show Pi's busy indicators in the status line, including retry and compaction
+* `[ui]` Show only the spinner for Pi's default `Working` message
 
 
 ## [0.0.1] - 01.11.2026
