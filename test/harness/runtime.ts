@@ -50,9 +50,11 @@ type Model = NonNullable<ExtensionContext["model"]>;
 export async function createRuntime(t: TestContext, options: RuntimeOptions): Promise<Runtime> {
 	const provider = await startMockProvider();
 	t.after(() => provider.close());
+
 	// After hooks run in registration order: the session must stop before its directory is removed
 	let stopSession: (() => void) | undefined;
 	t.after(() => stopSession?.());
+
 	const directory = await mkdtemp(join(tmpdir(), "pi-tui-prompt-box-test-"));
 	t.after(() => rm(directory, { recursive: true, force: true }));
 
@@ -60,6 +62,7 @@ export async function createRuntime(t: TestContext, options: RuntimeOptions): Pr
 		cacheWarming: "off", compaction: { enabled: false }, retry: { enabled: false },
 	});
 	useSettings(t, directory, () => settingsManager);
+
 	const modelRuntime = await ModelRuntime.create({
 		authPath: join(directory, "auth.json"), modelsPath: null, refreshOnCreate: false, allowModelNetwork: false,
 	});
@@ -80,10 +83,12 @@ export async function createRuntime(t: TestContext, options: RuntimeOptions): Pr
 	});
 	stopSession = () => session.dispose();
 	assert.deepEqual(extensionsResult.errors, []);
+
 	const errors: string[] = [];
 	await session.bindExtensions({
 		onError: (error) => { errors.push(`${error.event}: ${error.error}`); },
 	});
+
 	return { session, provider, errors };
 }
 

@@ -15,6 +15,7 @@ test("findBuiltInFooter finds Pi's footer nested in containers", async (t) => {
 	const footer = new FooterComponent(runtime.session, createFooterData());
 	const footerContainer = new Container();
 	footerContainer.addChild(footer);
+
 	const root = new Container();
 	root.addChild(new Container());
 	root.addChild(footerContainer);

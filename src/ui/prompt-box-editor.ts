@@ -62,7 +62,8 @@ export class PromptBoxEditor extends CustomEditor {
 
 	override render(width: number): string[] {
 		const textWidth = width - LEFT_MARGIN - RIGHT_MARGIN - BAR_WIDTH - 2 * INNER_PADDING;
-		if (textWidth < 1) return super.render(width);
+		if (textWidth < 1)
+			return super.render(width);
 
 		// Base layout: top border, text lines, bottom border, autocomplete lines
 		const baseLines = super.render(textWidth);
@@ -73,6 +74,7 @@ export class PromptBoxEditor extends CustomEditor {
 		const boxWidth = width - LEFT_MARGIN - RIGHT_MARGIN - BAR_WIDTH;
 		const barColor = this.borderColor;
 		const status = this.renderStatusLine(textWidth, barColor);
+
 		return [
 			renderBoxRow("", textWidth, barColor),
 			...textLines.map((line) => renderBoxRow(line, textWidth, barColor)),
@@ -91,15 +93,19 @@ export class PromptBoxEditor extends CustomEditor {
 	private renderStatusLine(textWidth: number, barColor: (text: string) => string): string {
 		const text = this.renderStatus(barColor, detectBashMode(this.getText()));
 		const indicator = this.statusIndicator;
-		if (!indicator) return truncateToWidth(text, textWidth, "");
+		if (!indicator)
+			return truncateToWidth(text, textWidth, "");
 
 		const spinnerWidth = visibleWidth(indicator.renderSpinnerInBorder(textWidth));
 		const fittedText = truncateToWidth(text, Math.max(0, textWidth - BUSY_GAP - spinnerWidth), "");
 		const busyWidth = textWidth - visibleWidth(fittedText) - BUSY_GAP;
-		if (busyWidth < 1) return fittedText;
+		if (busyWidth < 1)
+			return fittedText;
+
 		const busy = hasDefaultWorkingMessage(indicator)
 			? indicator.renderSpinnerInBorder(busyWidth)
 			: indicator.renderInBorder(busyWidth);
+
 		return truncateToWidth(`${fittedText}${" ".repeat(BUSY_GAP)}${busy}`, textWidth, "");
 	}
 }
@@ -110,11 +116,16 @@ export class PromptBoxEditor extends CustomEditor {
  * An indicator without a spinner keeps its message, so it never disappears.
  */
 function hasDefaultWorkingMessage(indicator: StatusIndicator): boolean {
-	if (indicator.kind !== "working") return false;
+	if (indicator.kind !== "working")
+		return false;
+
 	const spinner = stripTerminalSequences(indicator.renderSpinnerInBorder(MESSAGE_CHECK_WIDTH));
-	if (!spinner) return false;
+	if (!spinner)
+		return false;
+
 	const rendered = stripTerminalSequences(indicator.renderInBorder(MESSAGE_CHECK_WIDTH));
 	const message = rendered.startsWith(`${spinner} `) ? rendered.slice(spinner.length + 1) : rendered;
+
 	return DEFAULT_WORKING_MESSAGE.test(message);
 }
 
@@ -123,8 +134,12 @@ function hasDefaultWorkingMessage(indicator: StatusIndicator): boolean {
  */
 function detectBashMode(text: string): BashMode {
 	const input = text.trimStart();
-	if (input.startsWith("!!")) return "no-context";
-	if (input.startsWith("!")) return "context";
+	if (input.startsWith("!!"))
+		return "no-context";
+
+	if (input.startsWith("!"))
+		return "context";
+
 	return "off";
 }
 
@@ -139,6 +154,7 @@ function renderHalfRow(
 ): string {
 	const leftMargin = " ".repeat(LEFT_MARGIN);
 	const rightMargin = " ".repeat(RIGHT_MARGIN);
+
 	return `${leftMargin}${barColor(barChar)}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${rightMargin}`;
 }
 
@@ -152,5 +168,6 @@ function renderBoxRow(content: string, textWidth: number, barColor: (text: strin
 	const fill = " ".repeat(Math.max(0, textWidth - visibleWidth(content)));
 	// Styled content may reset all attributes, which would also drop the box background
 	const boxedContent = content.replaceAll(RESET, RESET + BOX_BG);
+
 	return `${leftMargin}${barColor("┃")}${RESET}${BOX_BG}${padding}${boxedContent}${fill}${padding}${RESET}${rightMargin}`;
 }

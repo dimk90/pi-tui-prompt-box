@@ -17,6 +17,8 @@
 - [ ] Adjust padding for autocompletion list (reduce padding by 2 columns)?
 - [ ] Check the prompt box in Pi's regular TUI mode (`--tui-mode`); adjust it or disable it there.
   - Known Issue: exit from regular mode leave black gap in place of cursor (see `doc/issue-1.png`).
+- [ ] Check if non-fullscreen dialog/overlay can be paaded as well as the chat (session) output area.
+  - E.g. permission-system messages.
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
   - Show them in the padding rows or in the status line.
@@ -26,6 +28,7 @@
   - `setEditorComponent` copies it over our `paddingX: 0`, so text gets extra indent inside the box.
   - Ignore it or include it in the width math.
 - [ ] Decide what the status line shows when thinking is off (now `· Off`).
+- [ ] Add 1 column right padding for the chat in fullscreen mode to fit scrollbar without overlapping with chat.
 - [x] Split `src/index.ts` as described in `doc/ARCHITECTURE.md`.
   - Status line and editor component in separate modules.
 - [ ] Dynamic background brightening function for prompt box:
@@ -46,8 +49,6 @@
 
 # Backlog
 
-- [ ] Check if non-fullscreen dialog/overlay can be paaded as well as the chat (session) output area.
-  - E.g. permission-system messages.
 - [ ] Show subscription quota inside the box (separate compatible extension).
 - [ ] Keep prompt boxes for user messages/prompts.
   - Show it without padding to stand out of model/tools output.

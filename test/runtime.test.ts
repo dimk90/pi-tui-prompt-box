@@ -23,5 +23,6 @@ async function recordRequestBody(t: TestContext, extensions: ExtensionFactory[])
 	assert.deepEqual(runtime.errors, []);
 	assert.equal(runtime.provider.requests.length, 1);
 	const body = JSON.stringify(runtime.provider.requests[0].body);
+
 	return body.replaceAll(runtime.session.sessionManager.getCwd(), "<cwd>");
 }

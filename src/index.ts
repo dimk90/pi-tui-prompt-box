@@ -35,12 +35,16 @@ export default function promptBox(pi: ExtensionAPI): void {
 		});
 
 		// Pi calls the editor factory synchronously, so editorTui is set here in TUI mode only
-		if (!editorTui) return;
+		if (!editorTui)
+			return;
+
 		restoreChat = padChat(editorTui);
 
 		// Search before setFooter(): it removes the current footer from the tree before calling the factory
 		const builtInFooter = findBuiltInFooter(editorTui);
-		if (!builtInFooter) return;
+		if (!builtInFooter)
+			return;
+
 		const readModelState = () => ({ model: ctx.model, thinkingLevel: pi.getThinkingLevel() });
 		ctx.ui.setFooter(() => new PaddedFooter(builtInFooter, readModelState));
 	});
@@ -48,7 +52,9 @@ export default function promptBox(pi: ExtensionAPI): void {
 	// Pi keeps the chat container across extension reloads and session changes, so put it back for the next
 	// extension instance; on quit it stays padded, as Pi may still print the transcript
 	pi.on("session_shutdown", (event) => {
-		if (event.reason !== "quit") restoreChat?.();
+		if (event.reason !== "quit")
+			restoreChat?.();
+
 		restoreChat = undefined;
 	});
 }

@@ -30,13 +30,17 @@ export interface StatusLineOptions {
  */
 export function formatStatus(options: StatusLineOptions): string {
 	const { theme, levelColor, bashMode, model, thinkingLevel } = options;
-	if (bashMode === "context") return levelColor("Bash");
-	if (bashMode === "no-context") return `${levelColor("Bash")}${theme.fg("dim", " (no context)")}`;
+	if (bashMode === "context")
+		return levelColor("Bash");
+
+	if (bashMode === "no-context")
+		return `${levelColor("Bash")}${theme.fg("dim", " (no context)")}`;
 
 	const modelText = model
 		? `${theme.fg("text", model.name)} ${theme.fg("dim", model.provider)}`
 		: theme.fg("dim", "no model");
 	const separator = theme.fg("dim", " · ");
 	const level = levelColor(thinkingLevel);
+
 	return `${modelText}${separator}${level}`;
 }

@@ -45,12 +45,15 @@ export async function startMockProvider(): Promise<MockProvider> {
 		// A long synchronous test can block the shared event loop past the 5 s keep-alive timeout; the server
 		// then closes an idle connection just as the client reuses it, so open a new one for every request
 		response.setHeader("Connection", "close");
+
 		if (request.url !== COMPLETIONS_PATH) {
 			response.writeHead(404).end();
 			return;
 		}
+
 		const body = JSON.parse(await readBody(request)) as Record<string, unknown>;
 		requests.push({ body });
+
 		const reply = replies.shift() ?? DEFAULT_REPLY;
 		const model = typeof body.model === "string" ? body.model : "mock";
 		response.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" });
@@ -59,8 +62,10 @@ export async function startMockProvider(): Promise<MockProvider> {
 
 	server.listen(0, "127.0.0.1");
 	await once(server, "listening");
+
 	const address = server.address();
-	if (!address || typeof address === "string") throw new Error("Mock provider has no TCP address");
+	if (!address || typeof address === "string")
+		throw new Error("Mock provider has no TCP address");
 
 	return {
 		baseUrl: `http://127.0.0.1:${address.port}/v1`,
@@ -77,6 +82,7 @@ export async function startMockProvider(): Promise<MockProvider> {
 async function readBody(request: IncomingMessage): Promise<string> {
 	const chunks: Buffer[] = [];
 	for await (const chunk of request) chunks.push(chunk as Buffer);
+
 	return Buffer.concat(chunks).toString("utf8");
 }
 
@@ -90,5 +96,6 @@ function streamEvents(reply: MockReply, model: string, sequence: number): string
 	const usage = { prompt_tokens: 10, completion_tokens: 1, total_tokens: 11 };
 	const first = chunk({ role: "assistant", content: reply.text }, null);
 	const last = chunk({}, "stop", usage);
+
 	return [first, last].map((data) => `data: ${JSON.stringify(data)}\n\n`).concat("data: [DONE]\n\n");
 }

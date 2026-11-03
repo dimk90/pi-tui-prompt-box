@@ -29,9 +29,10 @@ interface ParentComponent extends Component {
  *          for example when the chat is already wrapped.
  */
 export function padChat(root: Component): (() => void) | undefined {
-	if (!isParent(root)) return undefined;
-	const document = root.children[0];
+	if (!isParent(root))
+		return undefined;
 
+	const document = root.children[0];
 	if (!document || !isParent(document) || document.children.length !== DOCUMENT_CHILD_COUNT)
 		return undefined;
 
@@ -44,7 +45,8 @@ export function padChat(root: Component): (() => void) | undefined {
 
 	return () => {
 		const index = document.children.indexOf(paddedChat);
-		if (index !== -1) document.children[index] = chat;
+		if (index !== -1)
+			document.children[index] = chat;
 	};
 }
 
@@ -64,7 +66,9 @@ export class PaddedChat implements Component {
 		const innerWidth = width - LEFT_MARGIN - RIGHT_MARGIN;
 		if (innerWidth < 1)
 			return this.chat.render(width);
+
 		const leftMargin = " ".repeat(LEFT_MARGIN);
+
 		return this.chat.render(innerWidth).map((line) => leftMargin + line);
 	}
 

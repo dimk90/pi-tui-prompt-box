@@ -28,12 +28,18 @@ export interface FooterModelState {
  * methods, not with `instanceof`: Pi itself uses duck typing, as `instanceof` can fail across module copies.
  */
 export function findBuiltInFooter(root: Component): Component | undefined {
-	if (isBuiltInFooter(root)) return root;
-	if (!("children" in root) || !Array.isArray(root.children)) return undefined;
+	if (isBuiltInFooter(root))
+		return root;
+
+	if (!("children" in root) || !Array.isArray(root.children))
+		return undefined;
+
 	for (const child of root.children as Component[]) {
 		const footer = findBuiltInFooter(child);
-		if (footer) return footer;
+		if (footer)
+			return footer;
 	}
+
 	return undefined;
 }
 
@@ -46,17 +52,23 @@ export function findBuiltInFooter(root: Component): Component | undefined {
  */
 export function removeModelPart(line: string, state: FooterModelState): string {
 	const { model, thinkingLevel } = state;
-	if (!model) return line;
-	const plainLine = stripTerminalSequences(line);
-	let modelPart = model.id;
-	if (model.reasoning) modelPart += thinkingLevel === "off" ? " • thinking off" : ` • ${thinkingLevel}`;
+	if (!model)
+		return line;
 
+	let modelPart = model.id;
+	if (model.reasoning)
+		modelPart += thinkingLevel === "off" ? " • thinking off" : ` • ${thinkingLevel}`;
+
+	const plainLine = stripTerminalSequences(line);
 	const gap = " ".repeat(MIN_MODEL_GAP);
 	for (const candidate of [`(${model.provider}) ${modelPart}`, modelPart]) {
-		if (!plainLine.endsWith(gap + candidate)) continue;
+		if (!plainLine.endsWith(gap + candidate))
+			continue;
+
 		const statsWidth = visibleWidth(plainLine.slice(0, -candidate.length).trimEnd());
 		return truncateToWidth(line, statsWidth, "");
 	}
+
 	return line;
 }
 
@@ -77,10 +89,13 @@ export class PaddedFooter implements Component {
 
 	render(width: number): string[] {
 		const innerWidth = width - LEFT_MARGIN - RIGHT_MARGIN;
-		if (innerWidth < 1) return this.footer.render(width);
+		if (innerWidth < 1)
+			return this.footer.render(width);
+
 		const leftMargin = " ".repeat(LEFT_MARGIN);
 		const lines = this.footer.render(innerWidth);
 		const modelState = this.readModelState();
+
 		return lines.map((line, index) => {
 			const content = index === STATS_LINE_INDEX ? removeModelPart(line, modelState) : line;
 			return leftMargin + content;

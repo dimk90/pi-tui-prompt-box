@@ -62,7 +62,8 @@ test("PaddedChat passes mouse events in chat coordinates and ignores the margins
 	assert.equal(events[0]?.x, 5);
 	assert.equal(events[0]?.width, innerWidth);
 
-	if (LEFT_MARGIN > 0) assert.equal(paddedChat.handleMouse(createMouseEvent(LEFT_MARGIN - 1, 80)), undefined);
+	if (LEFT_MARGIN > 0)
+		assert.equal(paddedChat.handleMouse(createMouseEvent(LEFT_MARGIN - 1, 80)), undefined);
 	assert.equal(paddedChat.handleMouse(createMouseEvent(LEFT_MARGIN + innerWidth, 80)), undefined);
 	assert.equal(events.length, 1);
 });
@@ -74,9 +75,11 @@ function createTree(): { root: Container; document: Container; chat: Container }
 	document.addChild(new Container());
 	document.addChild(new Container());
 	document.addChild(chat);
+
 	const root = new Container();
 	root.addChild(document);
 	root.addChild(new Container());
+
 	return { root, document, chat };
 }
 

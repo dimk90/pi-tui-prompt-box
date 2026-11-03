@@ -51,6 +51,7 @@ test("PromptBoxEditor cuts the indicator message, then the text, but keeps the s
 function createEditor(): PromptBoxEditor {
 	const tui = { requestRender() {}, terminal: { rows: 40 } } as unknown as TUI;
 	const theme = { borderColor: (text: string) => text, selectList: {} } as unknown as EditorTheme;
+
 	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => "model");
 }
 
@@ -63,6 +64,7 @@ function createIndicator(kind: StatusIndicatorKind, spinner: string, message: st
 		renderInBorder: (width: number) => truncateToWidth(spinner ? `${spinner} ${message}` : message, width, ""),
 		renderSpinnerInBorder: (width: number) => truncateToWidth(spinner, width, ""),
 	};
+
 	return indicator as unknown as StatusIndicator;
 }
 
@@ -73,5 +75,6 @@ function renderStatusRow(editor: PromptBoxEditor, width: number): string {
 	const lines = editor.render(width);
 	// Box rows: top padding, text lines, blank row, status row, half row
 	const statusRow = lines[lines.length - 2] ?? "";
+
 	return stripTerminalSequences(statusRow).slice(BOX_COLUMNS - 2).trim();
 }
