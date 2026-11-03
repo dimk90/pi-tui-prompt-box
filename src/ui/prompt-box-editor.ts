@@ -13,6 +13,8 @@ export const LEFT_MARGIN = 1;
 export const RIGHT_MARGIN = 0;
 const INNER_PADDING = 2;
 const BAR_WIDTH = 1;
+// Spaces between the status line text and Pi's busy indicator
+const BUSY_GAP = 2;
 
 // Returned by renderBottomBorder() so render() can find where the text lines end
 const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
@@ -22,6 +24,9 @@ const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
  */
 export type RenderStatus = (barColor: (text: string) => string, bashMode: BashMode) => string;
 
+// Pi does not export the StatusIndicator type
+type StatusIndicator = NonNullable<Parameters<CustomEditor["setWorkingStatusIndicator"]>[0]>;
+
 /**
  * Main editor drawn as a filled box with a left accent bar and a status line inside.
  *
@@ -29,13 +34,22 @@ export type RenderStatus = (barColor: (text: string) => string, bashMode: BashMo
  * wraps every line in the box background. `renderStatus` is called on every
  * render, so the status line always shows the current state. The accent bar
  * uses `borderColor`, which Pi sets from the thinking level and bash mode.
+ * With `embedWorkingStatus`, Pi passes its busy indicators (working, retry,
+ * compaction, branch summary) to the editor, which shows them in the status line.
  */
 export class PromptBoxEditor extends CustomEditor {
 	private readonly renderStatus: RenderStatus;
+	private statusIndicator: StatusIndicator | undefined;
 
 	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager, renderStatus: RenderStatus) {
-		super(tui, theme, keybindings, { paddingX: 0 });
+		super(tui, theme, keybindings, { paddingX: 0, embedWorkingStatus: true });
 		this.renderStatus = renderStatus;
+	}
+
+	// The base class keeps the indicator private, so keep a copy for the status line
+	override setWorkingStatusIndicator(indicator: StatusIndicator | undefined): void {
+		super.setWorkingStatusIndicator(indicator);
+		this.statusIndicator = indicator;
 	}
 
 	protected override renderBottomBorder(): string {
@@ -54,7 +68,7 @@ export class PromptBoxEditor extends CustomEditor {
 
 		const boxWidth = width - LEFT_MARGIN - RIGHT_MARGIN - BAR_WIDTH;
 		const barColor = this.borderColor;
-		const status = truncateToWidth(this.renderStatus(barColor, detectBashMode(this.getText())), textWidth, "");
+		const status = this.renderStatusLine(textWidth, barColor);
 		return [
 			renderBoxRow("", textWidth, barColor),
 			...textLines.map((line) => renderBoxRow(line, textWidth, barColor)),
@@ -63,6 +77,23 @@ export class PromptBoxEditor extends CustomEditor {
 			renderHalfRow("╹", "▀", boxWidth, barColor),
 			...autocompleteLines.map((line) => " ".repeat(LEFT_MARGIN + BAR_WIDTH + INNER_PADDING) + line),
 		];
+	}
+
+	/**
+	 * Renders the status line text followed by Pi's busy indicator, if any, within `textWidth`.
+	 * The text is cut first so the spinner always fits; the indicator message is cut as Pi does in its border.
+	 */
+	private renderStatusLine(textWidth: number, barColor: (text: string) => string): string {
+		const text = this.renderStatus(barColor, detectBashMode(this.getText()));
+		const indicator = this.statusIndicator;
+		if (!indicator) return truncateToWidth(text, textWidth, "");
+
+		const spinnerWidth = visibleWidth(indicator.renderSpinnerInBorder(textWidth));
+		const fittedText = truncateToWidth(text, Math.max(0, textWidth - BUSY_GAP - spinnerWidth), "");
+		const busyWidth = textWidth - visibleWidth(fittedText) - BUSY_GAP;
+		if (busyWidth < 1) return fittedText;
+		const busy = indicator.renderInBorder(busyWidth);
+		return truncateToWidth(`${fittedText}${" ".repeat(BUSY_GAP)}${busy}`, textWidth, "");
 	}
 }
 

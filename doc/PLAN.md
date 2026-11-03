@@ -9,7 +9,8 @@
 - [x] Add padding to the footer to align with the prompt box.
 - [x] Hide or move model&provider from the footer.
   - Only in Pi's built-in footer; custom footers hide their own parts.
-- [ ] Move Pi busy indicator inside the prompt box.
+- [x] Move Pi busy indicator inside the prompt box.
+  - Pi's `embedWorkingStatus` editor option: working, retry, compaction, branch summary.
 - [ ] Add padding to the model/tools output to align with the prompt box.
 - [x] Decide about upper row of the box - should it be full-size?
 - [ ] Adjust padding for autocompletion?
@@ -33,7 +34,6 @@
   - Every row has the full width.
   - Status line truncation.
   - Autocomplete lines placed below the box.
-- [ ] Add a lifecycle test: the spinner timer stops on `session_shutdown` without `agent_settled`.
 - [ ] Fix `doc/ui.md`.
   - Terminal background is the user's, not always black.
 - [ ] Add a demo GIF (S-VHS) and logo to the README:
@@ -58,6 +58,11 @@
 - [ ] Handle other extensions that call `setEditorComponent`: only the last one wins.
   - Document it in the README or detect it.
 - [ ] Configurable status line: choose which parts to show (e.g. hide the provider).
+- [ ] Remove the startup flicker: Pi's default editor and footer show before the box.
+  - Pi draws the first frame (`ui.start()`) before `session_start`, the first event with `ctx.ui`.
+  - Also on `/reload`, where Pi restores the built-in editor and footer first.
+  - Needs a Pi change, e.g. register editor/footer factories at load time; draft a feature request.
+  - Don't patch Pi's classes from the extension factory: global and fragile.
 - [ ] Show the routed model (`→ model`) in the status line.
   - Pi's footer keeps its model part for routed models, as the text does not match.
   - Add mock demo with virtual/routed model.

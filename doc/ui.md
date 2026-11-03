@@ -29,7 +29,11 @@ Legend:
   - `·` — separator, theme `dim`.
   - `Big Pickle` — model name, theme `text`.
   - `OpenCode` — provider, theme `dim`.
-  - `⠏ Working` -- busy indicator (pi agent), theme `dim`.
+  - `⠏ Working` — Pi's busy indicator, two spaces after the text: working,
+    retry, compaction, or branch summary, with the message other extensions set.
+    Pi colors it: working and compaction in the accent bar color, retry in `warning`.
+    When the line is too narrow, the text is cut first, then the indicator
+    message; the spinner stays.
 - Bash mode (input starts with `!`): the accent bar uses Pi's bash mode color, and
   the status line shows `Bash` in that color instead of the model, provider, and mode.
   The busy indicator still follows it.

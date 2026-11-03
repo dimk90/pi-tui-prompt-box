@@ -22,24 +22,21 @@ export interface StatusLineOptions {
 	bashMode: BashMode;
 	model: ExtensionContext["model"];
 	thinkingLevel: string;
-	/** Spinner frame of the busy indicator; undefined when the agent is idle. */
-	spinnerFrame: string | undefined;
 }
 
 /**
- * Builds the status line: model, provider, thinking level and an optional busy indicator.
- * In bash mode, `Bash` replaces the model, provider and thinking level.
+ * Builds the status line text: model, provider and thinking level.
+ * In bash mode, `Bash` replaces them. Pi's busy indicator is added by the editor.
  */
 export function formatStatus(options: StatusLineOptions): string {
-	const { theme, levelColor, bashMode, model, thinkingLevel, spinnerFrame } = options;
-	const busy = spinnerFrame ? theme.fg("dim", `  ${spinnerFrame} Working`) : "";
-	if (bashMode === "context") return `${levelColor("Bash")}${busy}`;
-	if (bashMode === "no-context") return `${levelColor("Bash")}${theme.fg("dim", " (no context)")}${busy}`;
+	const { theme, levelColor, bashMode, model, thinkingLevel } = options;
+	if (bashMode === "context") return levelColor("Bash");
+	if (bashMode === "no-context") return `${levelColor("Bash")}${theme.fg("dim", " (no context)")}`;
 
 	const modelText = model
 		? `${theme.fg("text", model.name)} ${theme.fg("dim", model.provider)}`
 		: theme.fg("dim", "no model");
 	const separator = theme.fg("dim", " · ");
 	const level = levelColor(thinkingLevel);
-	return `${modelText}${separator}${level}${busy}`;
+	return `${modelText}${separator}${level}`;
 }

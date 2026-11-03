@@ -8,11 +8,8 @@ state, and the required invariants. The look of the box is specified in
 ## Lifecycle
 
 ```text
-session_start    → hide Pi's working indicator, install PromptBoxEditor via setEditorComponent,
+session_start    → install PromptBoxEditor via setEditorComponent,
                    wrap Pi's built-in footer in PaddedFooter via setFooter
-agent_start      → start the spinner timer; each tick requests a render
-agent_settled    → stop the spinner; agent_end is too early, Pi may still continue the run
-session_shutdown → stop the spinner, drop the TUI reference; idempotent
 ```
 
 The editor factory passed to `setEditorComponent` runs when Pi builds the
@@ -40,9 +37,9 @@ footers from other extensions are never wrapped; hiding their parts is their job
 
 | Path                          | Responsibility                                                   |
 | ----------------------------- | ---------------------------------------------------------------- |
-| `src/index.ts`                | Wiring: factory, lifecycle handlers, spinner and closure state.  |
+| `src/index.ts`                | Wiring: factory and the `session_start` handler.                 |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
-| `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, busy spinner. |
+| `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.    |
 | `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed.  |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
 
@@ -62,16 +59,26 @@ checked with Pi's rules: the input, without leading whitespace, starts with
 `!`, or with `!!` when the output stays out of the context. The status line reads the other colors
 from `ctx.ui.theme` at render time, so theme changes apply on the next render.
 
+## Busy Indicator
+
+The editor sets `embedWorkingStatus`, so Pi passes its status indicator
+(working, retry, compaction, branch summary) to `setWorkingStatusIndicator()`
+instead of drawing it above the editor. Pi owns the indicator: it creates,
+animates, colors, and disposes it, and applies `setWorkingMessage`,
+`setWorkingIndicator`, and `setWorkingVisible` from extensions. The editor only
+keeps a reference and draws it after the status line text. The text is cut
+first so the spinner fits; the rest of the indicator is cut to the remaining
+width with `renderInBorder()`.
+
 ## State
 
-Closure state only, nothing is persisted: whether the agent is working, the
-spinner frame and timer, and the active TUI. Model and thinking level are read
-from the context at render time.
+No extension state; nothing is persisted. The editor keeps Pi's current status
+indicator. Model and thinking level are read from the context at render time.
 
 ## Required Invariants
 
 - Normal turns are unchanged: the extension adds nothing to provider requests.
-- The spinner timer never outlives the session.
+- The extension starts no timers; busy indicator animation is Pi's.
 - Widths below the box minimum fall back to the base editor rendering.
 - The footer content stays Pi's: `PaddedFooter` only narrows and indents it
   and removes the exactly matched model part, and never disposes the built-in
