@@ -11,10 +11,12 @@
   - Only in Pi's built-in footer; custom footers hide their own parts.
 - [x] Move Pi busy indicator inside the prompt box.
   - Pi's `embedWorkingStatus` editor option: working, retry, compaction, branch summary.
-- [ ] Add padding to the model/tools output to align with the prompt box.
+- [x] Add padding to the model/tools output to align with the prompt box.
+  - Chat only: colored blocks start in the accent bar column; header stays.
 - [x] Decide about upper row of the box - should it be full-size?
-- [ ] Adjust padding for autocompletion?
+- [ ] Adjust padding for autocompletion list (reduce padding by 2 columns)?
 - [ ] Check the prompt box in Pi's regular TUI mode (`--tui-mode`); adjust it or disable it there.
+  - Known Issue: exit from regular mode leave black gap in place of cursor (see `doc/issue-1.png`).
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
   - Show them in the padding rows or in the status line.
@@ -40,13 +42,12 @@
   - demo: switch thinking effort;
   - demo: bash mode;
   - demo: spinner;
-- [ ] Issue: exit from regular mode leave black gap in place of cursor.
-  - See `doc/issue-1.png`.
-
 
 
 # Backlog
 
+- [ ] Check if non-fullscreen dialog/overlay can be paaded as well as the chat (session) output area.
+  - E.g. permission-system messages.
 - [ ] Show subscription quota inside the box (separate compatible extension).
 - [ ] Keep prompt boxes for user messages/prompts.
   - Show it without padding to stand out of model/tools output.
