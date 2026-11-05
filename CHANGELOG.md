@@ -10,7 +10,7 @@
 * `[ui]` Remove the model and provider from Pi's built-in footer; the box shows them
 * `[ui]` Show Pi's busy indicators in the status line, including retry and compaction
 * `[ui]` Show only the spinner for Pi's default `Working` message
-* `[ui]` Indent Pi's chat by the box margin so message blocks align with the box
+* `[ui]` Indent the chat, queued messages, and widgets by the box margin
 
 
 ## [0.0.1] - 01.11.2026

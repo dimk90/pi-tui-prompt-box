@@ -9,9 +9,9 @@ state, and the required invariants. The look of the box is specified in
 
 ```text
 session_start    → install PromptBoxEditor via setEditorComponent,
-                   wrap Pi's chat container in PaddedChat,
+                   pad Pi's chat, queued messages, and widgets,
                    wrap Pi's built-in footer in PaddedFooter via setFooter
-session_shutdown → put Pi's chat container back, except on quit
+session_shutdown → remove the container padding, except on quit
 ```
 
 The editor factory passed to `setEditorComponent` runs when Pi builds the
@@ -27,17 +27,23 @@ matched by its `setSession` and `setAutoCompactEnabled` methods, not with
 already replaced it, the footer is left unchanged. Pi restores the built-in
 footer on every extension reload, so each `session_start` finds it again.
 
-Pi gives extensions no reference to its chat container either, and no API
-to replace it. `session_start` finds it by the tree shape: the first TUI child
-is Pi's document container with three containers (header, loaded resources,
-chat), and the chat is the last one. `PaddedChat` replaces it there, in both
-regular and fullscreen mode, as both render the document container. Pi keeps
-its own reference and keeps adding messages to the chat, so nothing else
-changes. If the tree has another shape, the chat is left unchanged.
-`PaddedChat` has no `children`, so it is never wrapped twice. Pi keeps the
-chat across extension reloads and session changes, so `session_shutdown` puts
-it back for the next extension instance. On quit it stays, as Pi may still
-print the transcript.
+Pi gives extensions no references to its chat, queued messages, and widget
+containers either, and no API to replace them. `session_start` finds them by
+the shape of the TUI tree, whose seven children are: document, queued
+messages, status, widgets above, editor, widgets below, and footer. The
+editor child must hold the `PromptBoxEditor`, and the document must hold three
+containers: header, loaded resources, and chat. If the tree has another shape,
+nothing is changed. The header, loaded resources, and status stay unpadded.
+
+The containers can't be replaced in the tree: fullscreen mode builds its
+layout from the container objects, not from the TUI children. So
+`padComponent()` sets its own `render` and `handleMouse` on each container
+instance, never on Pi's classes, and both modes use them. Pi keeps adding
+children to the same objects, so nothing else changes. A container with its
+own `render` is already padded and is not padded again. Pi keeps these
+containers across extension reloads and session changes, so
+`session_shutdown` deletes the own properties for the next extension
+instance. On quit the padding stays, as Pi may still print the transcript.
 
 The box status line already shows the model, so `PaddedFooter` removes the
 model part that Pi right-aligns on the footer stats line (second line):
@@ -54,7 +60,7 @@ footers from other extensions are never wrapped; hiding their parts is their job
 | `src/index.ts`                | Wiring: factory and the `session_start` handler.                 |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.    |
-| `src/ui/padded-chat.ts`       | `PaddedChat`: Pi's chat container moved right by the margins.    |
+| `src/ui/padded-containers.ts` | Pi's chat, queued messages, and widgets moved by the margins.    |
 | `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed.  |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
 
@@ -94,7 +100,7 @@ full, as is an indicator without a spinner frame.
 ## State
 
 No extension state; nothing is persisted. The editor keeps Pi's current status
-indicator. The extension keeps the function that puts the chat container back. Model and thinking level are read from the context at render time.
+indicator. The extension keeps the function that removes the container padding. Model and thinking level are read from the context at render time.
 
 ## Required Invariants
 
@@ -105,5 +111,6 @@ indicator. The extension keeps the function that puts the chat container back. M
   and removes the exactly matched model part, and never disposes the built-in
   footer, which Pi owns.
 - Custom footers set by other extensions are never changed.
-- The chat content stays Pi's: `PaddedChat` only narrows and indents it, and
-  passes mouse events in the chat coordinates.
+- The content of padded containers stays Pi's: the padding only narrows and
+  indents it, and passes mouse events in the container coordinates.
+- Pi's classes are never changed; only the padded container instances are.

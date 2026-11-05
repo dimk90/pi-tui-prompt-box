@@ -1,23 +1,13 @@
 # TODO
 
-- [x] Add `early access` badge on GitHub.
-  - Reserve name on npm.
-  - Don't show it on pi.dev package list till it stable (no pi package tag in the manifest).
-- [x] Adjust colors to use current pi theme.
-  - Use the editor `borderColor` for the accent bar: Pi sets it from the thinking level.
-- [x] Show thinking effort as lower case - no need to capitalize.
-- [x] Add padding to the footer to align with the prompt box.
-- [x] Hide or move model&provider from the footer.
-  - Only in Pi's built-in footer; custom footers hide their own parts.
-- [x] Move Pi busy indicator inside the prompt box.
-  - Pi's `embedWorkingStatus` editor option: working, retry, compaction, branch summary.
-- [x] Add padding to the model/tools output to align with the prompt box.
-  - Chat only: colored blocks start in the accent bar column; header stays.
-- [x] Decide about upper row of the box - should it be full-size?
+- [x] Check the prompt box in Pi's regular TUI mode (`--tui-mode`); adjust it or disable it there.
+  - Kept enabled; runtime mode switches work (Pi gives components a TUI proxy).
+  - Known issue, left as is: on exit the cursor cell shows the terminal background (see `doc/issue-1.png`).
+    - Pi's `TuiMainScreen.beforeTerminalStop()` writes a plain space at the cursor after an SGR reset.
+    - Also on fullscreen exit with `fullscreenExitOutput: "transcript"` (Pi's default).
+    - On quit Pi stops the TUI before `session_shutdown`, so the extension can't fix it cleanly.
 - [ ] Adjust padding for autocompletion list (reduce padding by 2 columns)?
-- [ ] Check the prompt box in Pi's regular TUI mode (`--tui-mode`); adjust it or disable it there.
-  - Known Issue: exit from regular mode leave black gap in place of cursor (see `doc/issue-1.png`).
-- [ ] Check if non-fullscreen dialog/overlay can be paaded as well as the chat (session) output area.
+- [ ] Check if non-fullscreen dialog/overlay can be paded as well as the chat (session) output area.
   - E.g. permission-system messages.
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
@@ -45,26 +35,3 @@
   - demo: switch thinking effort;
   - demo: bash mode;
   - demo: spinner;
-
-
-# Backlog
-
-- [ ] Show subscription quota inside the box (separate compatible extension).
-- [ ] Keep prompt boxes for user messages/prompts.
-  - Show it without padding to stand out of model/tools output.
-  - Keep color to show effort for corresponding prompt.
-- [ ] Custom autocompletion visualization: drop up menu instead of dropdown.
-  - Probably need more advanced TUI API and components.
-  - Separate extension of optional part of this one?
-- [ ] Support light terminal themes (the fixed `#1e1e1e` box looks broken there).
-- [ ] Handle other extensions that call `setEditorComponent`: only the last one wins.
-  - Document it in the README or detect it.
-- [ ] Configurable status line: choose which parts to show (e.g. hide the provider).
-- [ ] Remove the startup flicker: Pi's default editor and footer show before the box.
-  - Pi draws the first frame (`ui.start()`) before `session_start`, the first event with `ctx.ui`.
-  - Also on `/reload`, where Pi restores the built-in editor and footer first.
-  - Needs a Pi change, e.g. register editor/footer factories at load time; draft a feature request.
-  - Don't patch Pi's classes from the extension factory: global and fragile.
-- [ ] Show the routed model (`→ model`) in the status line.
-  - Pi's footer keeps its model part for routed models, as the text does not match.
-  - Add mock demo with virtual/routed model.

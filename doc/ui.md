@@ -48,10 +48,10 @@ The model part on the right of its stats line (`(provider) model • level`) is
 removed, as the status line already shows it. A routed model (`→ …`) stays.
 Custom footers from other extensions are left unchanged.
 
-Chat: Pi's messages and tool output above the box are moved right by the box
-margins, so colored blocks (user messages, tool output) start in the same
-column as the accent bar. Pi's `outputPad` setting still adds its padding
-inside them. The header and the loaded resources above the chat stay unchanged.
+Chat, queued messages, and extension widgets: moved right by the box margins,
+so colored blocks (user messages, tool output) start in the same column as the
+accent bar. Pi's `outputPad` setting still adds its padding inside them. The
+header and the loaded resources above the chat stay unchanged.
 
 Colors: terminal `#0a0a0a`, box `#1e1e1e` (fixed, not from the theme).
 All other colors come from the current Pi theme.

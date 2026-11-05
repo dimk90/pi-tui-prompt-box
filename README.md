@@ -20,6 +20,10 @@ the provider, the thinking level, and a busy indicator.
 pi install npm:pi-tui-prompt-box
 ```
 
+## Demo
+
+TBD
+
 ## Context Footprint
 
 None. The extension only changes the terminal UI: it adds no tools, prompt

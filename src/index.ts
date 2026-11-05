@@ -7,7 +7,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
 
-import { padChat } from "./ui/padded-chat.ts";
+import { padPiContainers } from "./ui/padded-containers.ts";
 import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
 import { formatStatus } from "./ui/status-line.ts";
@@ -16,7 +16,7 @@ import { formatStatus } from "./ui/status-line.ts";
  * Registers the prompt box editor for every session.
  */
 export default function promptBox(pi: ExtensionAPI): void {
-	let restoreChat: (() => void) | undefined;
+	let restoreContainers: (() => void) | undefined;
 
 	pi.on("session_start", (_event, ctx) => {
 		const renderStatus: RenderStatus = (barColor, bashMode) =>
@@ -29,16 +29,18 @@ export default function promptBox(pi: ExtensionAPI): void {
 			});
 
 		let editorTui: TUI | undefined;
+		let editor: PromptBoxEditor | undefined;
 		ctx.ui.setEditorComponent((tui, theme, keybindings) => {
 			editorTui = tui;
-			return new PromptBoxEditor(tui, theme, keybindings, renderStatus);
+			editor = new PromptBoxEditor(tui, theme, keybindings, renderStatus);
+			return editor;
 		});
 
-		// Pi calls the editor factory synchronously, so editorTui is set here in TUI mode only
-		if (!editorTui)
+		// Pi calls the editor factory synchronously, so both are set here in TUI mode only
+		if (!editorTui || !editor)
 			return;
 
-		restoreChat = padChat(editorTui);
+		restoreContainers = padPiContainers(editorTui, editor);
 
 		// Search before setFooter(): it removes the current footer from the tree before calling the factory
 		const builtInFooter = findBuiltInFooter(editorTui);
@@ -49,12 +51,12 @@ export default function promptBox(pi: ExtensionAPI): void {
 		ctx.ui.setFooter(() => new PaddedFooter(builtInFooter, readModelState));
 	});
 
-	// Pi keeps the chat container across extension reloads and session changes, so put it back for the next
-	// extension instance; on quit it stays padded, as Pi may still print the transcript
+	// Pi keeps its containers across extension reloads and session changes, so remove the padding for the next
+	// extension instance; on quit it stays, as Pi may still print the transcript
 	pi.on("session_shutdown", (event) => {
 		if (event.reason !== "quit")
-			restoreChat?.();
+			restoreContainers?.();
 
-		restoreChat = undefined;
+		restoreContainers = undefined;
 	});
 }
