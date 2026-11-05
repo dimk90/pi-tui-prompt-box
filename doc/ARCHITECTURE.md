@@ -45,6 +45,18 @@ containers across extension reloads and session changes, so
 `session_shutdown` deletes the own properties for the next extension
 instance. On quit the padding stays, as Pi may still print the transcript.
 
+In fullscreen mode with the `auto` scrollbar, Pi draws the scrollbar over the
+last column of the chat, so the padded containers, the prompt box, and the
+footer are also narrowed by one column on the right, and keep their right
+edges aligned. In `always` mode Pi already narrows the chat itself; `hidden`
+mode and regular mode have no scrollbar. Pi gives extensions no reference to
+its scroll view, so `readScrollbarPadding()` reads the TUI's fullscreen layout
+root (a field Pi's types mark private) and looks among its children for the
+one that holds the document (the first TUI child) and has a `scrollbar` mode.
+If it is not found, no column is added. It is called on every render and mouse
+event, so the padding follows mode switches and changes of the scrollbar
+setting.
+
 The box status line already shows the model, so `PaddedFooter` removes the
 model part that Pi right-aligns on the footer stats line (second line):
 `(provider) model-id • level`. It builds that text from `ctx.model` and the
@@ -61,6 +73,7 @@ footers from other extensions are never wrapped; hiding their parts is their job
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.    |
 | `src/ui/padded-containers.ts` | Pi's chat, queued messages, and widgets moved by the margins.    |
+| `src/ui/scrollbar-padding.ts` | Right padding for Pi's fullscreen `auto` scrollbar.              |
 | `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed.  |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
 

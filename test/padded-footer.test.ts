@@ -38,6 +38,10 @@ test("PaddedFooter narrows the footer by the margins and indents every line", ()
 
 	assert.deepEqual(footerWithoutModel.render(80), [`${indent}first`, `${indent}second`]);
 	assert.deepEqual(widths, [80 - LEFT_MARGIN - RIGHT_MARGIN]);
+
+	const footerWithPadding = new PaddedFooter(footer, () => ({ model: undefined, thinkingLevel: "off" }), () => 1);
+	footerWithPadding.render(80);
+	assert.equal(widths[1], 80 - LEFT_MARGIN - RIGHT_MARGIN - 1, "right padding");
 });
 
 test("PaddedFooter removes the model part from the stats line only, with and without the provider", () => {

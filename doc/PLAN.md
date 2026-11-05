@@ -7,20 +7,17 @@
     - Also on fullscreen exit with `fullscreenExitOutput: "transcript"` (Pi's default).
     - On quit Pi stops the TUI before `session_shutdown`, so the extension can't fix it cleanly.
 - [ ] Adjust padding for autocompletion list (reduce padding by 2 columns)?
-- [ ] Check if non-fullscreen dialog/overlay can be paded as well as the chat (session) output area.
+- [ ] Check if non-fullscreen dialog/overlay can be padded as well as the chat (session) output area.
   - E.g. permission-system messages.
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
   - Show them in the padding rows or in the status line.
-- [x] Show bash mode (input starting with `!`).
-  - Pi shows it with `borderColor`, which the box drops.
 - [ ] Handle Pi's editor `paddingX` setting.
   - `setEditorComponent` copies it over our `paddingX: 0`, so text gets extra indent inside the box.
   - Ignore it or include it in the width math.
 - [ ] Decide what the status line shows when thinking is off (now `· Off`).
-- [ ] Add 1 column right padding for the chat in fullscreen mode to fit scrollbar without overlapping with chat.
-- [x] Split `src/index.ts` as described in `doc/ARCHITECTURE.md`.
-  - Status line and editor component in separate modules.
+- [x] Add 1 column right padding for the chat in fullscreen mode to fit scrollbar without overlapping with chat.
+  - Only with the `auto` scrollbar; also pads queued messages, widgets, prompt box, and footer.
 - [ ] Dynamic background brightening function for prompt box:
   - background[prompt-box] = brighten(theme.background)
 - [ ] Add render tests for the editor.

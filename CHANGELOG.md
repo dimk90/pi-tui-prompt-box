@@ -11,6 +11,7 @@
 * `[ui]` Show Pi's busy indicators in the status line, including retry and compaction
 * `[ui]` Show only the spinner for Pi's default `Working` message
 * `[ui]` Indent the chat, queued messages, and widgets by the box margin
+* `[ui]` Keep the chat clear of Pi's fullscreen `auto` scrollbar; box and footer align
 
 
 ## [0.0.1] - 01.11.2026

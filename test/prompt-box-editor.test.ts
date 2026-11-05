@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { KeybindingsManager } from "@earendil-works/pi-coding-agent";
-import { type EditorTheme, stripTerminalSequences, truncateToWidth, type TUI } from "@earendil-works/pi-tui";
+import {
+	type EditorTheme,
+	stripTerminalSequences,
+	truncateToWidth,
+	type TUI,
+	visibleWidth,
+} from "@earendil-works/pi-tui";
 
 import { PromptBoxEditor } from "../src/ui/prompt-box-editor.ts";
 
@@ -45,14 +51,25 @@ test("PromptBoxEditor cuts the indicator message, then the text, but keeps the s
 	assert.equal(renderStatusRow(editor, BOX_COLUMNS + 6), "mod  ⠋");
 });
 
+test("PromptBoxEditor leaves the right padding after the box", () => {
+	const editor = createEditor(() => 1);
+	const lines = editor.render(40);
+
+	for (const line of lines)
+		assert.equal(visibleWidth(line), 40);
+	assert.equal(renderStatusRow(editor, BOX_COLUMNS + 1 + 3), "mod");
+	const halfRow = stripTerminalSequences(lines.at(-1) ?? "");
+	assert.ok(halfRow.endsWith("▀ "), "one empty column after the box");
+});
+
 /**
  * Creates the editor with stubs for the parts the render path does not use, and a fixed status text.
  */
-function createEditor(): PromptBoxEditor {
+function createEditor(readRightPadding?: () => number): PromptBoxEditor {
 	const tui = { requestRender() {}, terminal: { rows: 40 } } as unknown as TUI;
 	const theme = { borderColor: (text: string) => text, selectList: {} } as unknown as EditorTheme;
 
-	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => "model");
+	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => "model", readRightPadding);
 }
 
 /**

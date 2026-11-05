@@ -53,5 +53,9 @@ so colored blocks (user messages, tool output) start in the same column as the
 accent bar. Pi's `outputPad` setting still adds its padding inside them. The
 header and the loaded resources above the chat stay unchanged.
 
+Fullscreen mode with the `auto` scrollbar: the chat, queued messages, widgets,
+prompt box, and footer leave the last terminal column empty, so the scrollbar
+does not cover the chat and all right edges stay aligned.
+
 Colors: terminal `#0a0a0a`, box `#1e1e1e` (fixed, not from the theme).
 All other colors come from the current Pi theme.

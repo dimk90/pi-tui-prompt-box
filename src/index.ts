@@ -10,6 +10,7 @@ import type { TUI } from "@earendil-works/pi-tui";
 import { padPiContainers } from "./ui/padded-containers.ts";
 import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
+import { readScrollbarPadding } from "./ui/scrollbar-padding.ts";
 import { formatStatus } from "./ui/status-line.ts";
 
 /**
@@ -32,7 +33,7 @@ export default function promptBox(pi: ExtensionAPI): void {
 		let editor: PromptBoxEditor | undefined;
 		ctx.ui.setEditorComponent((tui, theme, keybindings) => {
 			editorTui = tui;
-			editor = new PromptBoxEditor(tui, theme, keybindings, renderStatus);
+			editor = new PromptBoxEditor(tui, theme, keybindings, renderStatus, () => readScrollbarPadding(tui));
 			return editor;
 		});
 
@@ -48,7 +49,7 @@ export default function promptBox(pi: ExtensionAPI): void {
 			return;
 
 		const readModelState = () => ({ model: ctx.model, thinkingLevel: pi.getThinkingLevel() });
-		ctx.ui.setFooter(() => new PaddedFooter(builtInFooter, readModelState));
+		ctx.ui.setFooter((tui) => new PaddedFooter(builtInFooter, readModelState, () => readScrollbarPadding(tui)));
 	});
 
 	// Pi keeps its containers across extension reloads and session changes, so remove the padding for the next

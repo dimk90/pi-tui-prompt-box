@@ -6,6 +6,7 @@ import { CustomEditor, type KeybindingsManager } from "@earendil-works/pi-coding
 import { type EditorTheme, stripTerminalSequences, type TUI, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
+import type { ReadRightPadding } from "./scrollbar-padding.ts";
 import type { BashMode } from "./status-line.ts";
 
 /** Terminal columns left empty on each side of the box; the footer uses them too. */
@@ -40,14 +41,23 @@ type StatusIndicator = NonNullable<Parameters<CustomEditor["setWorkingStatusIndi
  * uses `borderColor`, which Pi sets from the thinking level and bash mode.
  * With `embedWorkingStatus`, Pi passes its busy indicators (working, retry,
  * compaction, branch summary) to the editor, which shows them in the status line.
+ * `readRightPadding` is called on every render and adds columns to the right margin.
  */
 export class PromptBoxEditor extends CustomEditor {
 	private readonly renderStatus: RenderStatus;
+	private readonly readRightPadding: ReadRightPadding;
 	private statusIndicator: StatusIndicator | undefined;
 
-	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager, renderStatus: RenderStatus) {
+	constructor(
+		tui: TUI,
+		theme: EditorTheme,
+		keybindings: KeybindingsManager,
+		renderStatus: RenderStatus,
+		readRightPadding: ReadRightPadding = () => 0,
+	) {
 		super(tui, theme, keybindings, { paddingX: 0, embedWorkingStatus: true });
 		this.renderStatus = renderStatus;
+		this.readRightPadding = readRightPadding;
 	}
 
 	// The base class keeps the indicator private, so keep a copy for the status line
@@ -61,7 +71,8 @@ export class PromptBoxEditor extends CustomEditor {
 	}
 
 	override render(width: number): string[] {
-		const textWidth = width - LEFT_MARGIN - RIGHT_MARGIN - BAR_WIDTH - 2 * INNER_PADDING;
+		const rightMargin = RIGHT_MARGIN + this.readRightPadding();
+		const textWidth = width - LEFT_MARGIN - rightMargin - BAR_WIDTH - 2 * INNER_PADDING;
 		if (textWidth < 1)
 			return super.render(width);
 
@@ -71,16 +82,16 @@ export class PromptBoxEditor extends CustomEditor {
 		const textLines = baseLines.slice(1, bottomBorderIndex);
 		const autocompleteLines = baseLines.slice(bottomBorderIndex + 1);
 
-		const boxWidth = width - LEFT_MARGIN - RIGHT_MARGIN - BAR_WIDTH;
+		const boxWidth = width - LEFT_MARGIN - rightMargin - BAR_WIDTH;
 		const barColor = this.borderColor;
 		const status = this.renderStatusLine(textWidth, barColor);
 
 		return [
-			renderBoxRow("", textWidth, barColor),
-			...textLines.map((line) => renderBoxRow(line, textWidth, barColor)),
-			renderBoxRow("", textWidth, barColor),
-			renderBoxRow(status, textWidth, barColor),
-			renderHalfRow("╹", "▀", boxWidth, barColor),
+			renderBoxRow("", textWidth, rightMargin, barColor),
+			...textLines.map((line) => renderBoxRow(line, textWidth, rightMargin, barColor)),
+			renderBoxRow("", textWidth, rightMargin, barColor),
+			renderBoxRow(status, textWidth, rightMargin, barColor),
+			renderHalfRow("╹", "▀", boxWidth, rightMargin, barColor),
 			...autocompleteLines.map((line) => " ".repeat(LEFT_MARGIN + BAR_WIDTH + INNER_PADDING) + line),
 		];
 	}
@@ -150,10 +161,11 @@ function renderHalfRow(
 	barChar: string,
 	fillChar: string,
 	boxWidth: number,
+	rightMarginWidth: number,
 	barColor: (text: string) => string,
 ): string {
 	const leftMargin = " ".repeat(LEFT_MARGIN);
-	const rightMargin = " ".repeat(RIGHT_MARGIN);
+	const rightMargin = " ".repeat(rightMarginWidth);
 
 	return `${leftMargin}${barColor(barChar)}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${rightMargin}`;
 }
@@ -161,9 +173,14 @@ function renderHalfRow(
 /**
  * Renders one full-height box row: accent bar, padding and content on the box background.
  */
-function renderBoxRow(content: string, textWidth: number, barColor: (text: string) => string): string {
+function renderBoxRow(
+	content: string,
+	textWidth: number,
+	rightMarginWidth: number,
+	barColor: (text: string) => string,
+): string {
 	const leftMargin = " ".repeat(LEFT_MARGIN);
-	const rightMargin = " ".repeat(RIGHT_MARGIN);
+	const rightMargin = " ".repeat(rightMarginWidth);
 	const padding = " ".repeat(INNER_PADDING);
 	const fill = " ".repeat(Math.max(0, textWidth - visibleWidth(content)));
 	// Styled content may reset all attributes, which would also drop the box background

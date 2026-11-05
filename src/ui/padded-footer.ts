@@ -6,6 +6,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { type Component, stripTerminalSequences, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 import { LEFT_MARGIN, RIGHT_MARGIN } from "./prompt-box-editor.ts";
+import type { ReadRightPadding } from "./scrollbar-padding.ts";
 
 // Index of the footer line with the token stats on the left and the model on the right
 const STATS_LINE_INDEX = 1;
@@ -73,22 +74,28 @@ export function removeModelPart(line: string, state: FooterModelState): string {
 }
 
 /**
- * Renders `footer` narrower by the box margins, indents every line by the left margin, and removes the
- * model part from the stats line.
+ * Renders `footer` narrower by the box margins and `readRightPadding()`, indents every line by the left
+ * margin, and removes the model part from the stats line.
  *
  * Pi owns the wrapped footer and keeps updating it, so this component never disposes it.
  */
 export class PaddedFooter implements Component {
 	private readonly footer: Component;
 	private readonly readModelState: () => FooterModelState;
+	private readonly readRightPadding: ReadRightPadding;
 
-	constructor(footer: Component, readModelState: () => FooterModelState) {
+	constructor(
+		footer: Component,
+		readModelState: () => FooterModelState,
+		readRightPadding: ReadRightPadding = () => 0,
+	) {
 		this.footer = footer;
 		this.readModelState = readModelState;
+		this.readRightPadding = readRightPadding;
 	}
 
 	render(width: number): string[] {
-		const innerWidth = width - LEFT_MARGIN - RIGHT_MARGIN;
+		const innerWidth = width - LEFT_MARGIN - RIGHT_MARGIN - this.readRightPadding();
 		if (innerWidth < 1)
 			return this.footer.render(width);
 
