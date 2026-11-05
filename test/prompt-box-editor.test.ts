@@ -4,10 +4,12 @@ import { test } from "node:test";
 import type { KeybindingsManager } from "@earendil-works/pi-coding-agent";
 import {
 	type EditorTheme,
+	type SelectItem,
 	SelectList,
 	stripTerminalSequences,
 	truncateToWidth,
 	type TUI,
+	type TuiMouseEvent,
 	visibleWidth,
 } from "@earendil-works/pi-tui";
 
@@ -66,16 +68,47 @@ test("PromptBoxEditor leaves the right padding after the box", () => {
 test("PromptBoxEditor aligns the autocomplete item text with the input text", () => {
 	const editor = createEditor();
 	editor.setText("/mo");
-	const plain = (text: string) => text;
-	const theme = { selectedPrefix: plain, selectedText: plain, description: plain, scrollInfo: plain, noMatch: plain };
-	// The base editor keeps the autocomplete state private; open the list as its trigger would
-	Reflect.set(editor, "autocompleteList", new SelectList([{ value: "model", label: "model" }], 5, theme));
-	Reflect.set(editor, "autocompleteState", "regular");
+	openAutocomplete(editor, [{ value: "model", label: "model" }]);
 
 	const lines = editor.render(40).map((line) => stripTerminalSequences(line));
 	const inputColumn = (lines[1] ?? "").indexOf("/mo");
 	const autocompleteRow = lines.at(-1) ?? "";
 	assert.equal(autocompleteRow.indexOf("→ model") + 2, inputColumn);
+});
+
+test("PromptBoxEditor places the cursor where the input text is clicked", () => {
+	const editor = createEditor();
+	editor.setText("hello\nworld");
+	const lines = editor.render(40).map((line) => stripTerminalSequences(line));
+
+	const row = lines.findIndex((line) => line.includes("world"));
+	const column = (lines[row] ?? "").indexOf("world") + 3;
+	assert.deepEqual(editor.handleMouse(createClick(column, row, lines.length)), { handled: true, focus: true });
+	assert.deepEqual(editor.getCursor(), { line: 1, col: 3 });
+
+	const statusRow = lines.length - 2;
+	assert.deepEqual(editor.handleMouse(createClick(column, statusRow, lines.length)), { handled: true, focus: true });
+	assert.deepEqual(editor.getCursor(), { line: 1, col: 3 }, "clicks on the status line keep the cursor");
+});
+
+test("PromptBoxEditor selects the clicked autocomplete item", () => {
+	const editor = createEditor();
+	editor.setText("/mo");
+	const items = [
+		{ value: "model", label: "model" },
+		{ value: "move", label: "move" },
+	];
+	const list = openAutocomplete(editor, items);
+	let selected: string | undefined;
+	list.onSelect = (item) => {
+		selected = item.value;
+	};
+	const lines = editor.render(40).map((line) => stripTerminalSequences(line));
+
+	const row = lines.findIndex((line) => line.includes("move"));
+	const column = (lines[row] ?? "").indexOf("move");
+	editor.handleMouse(createClick(column, row, lines.length));
+	assert.equal(selected, "move");
 });
 
 /**
@@ -99,6 +132,38 @@ function createIndicator(kind: StatusIndicatorKind, spinner: string, message: st
 	};
 
 	return indicator as unknown as StatusIndicator;
+}
+
+/**
+ * Opens the autocomplete list with `items` as its trigger would; the base editor keeps the state private.
+ */
+function openAutocomplete(editor: PromptBoxEditor, items: SelectItem[]): SelectList {
+	const plain = (text: string) => text;
+	const theme = { selectedPrefix: plain, selectedText: plain, description: plain, scrollInfo: plain, noMatch: plain };
+	const list = new SelectList(items, 5, theme);
+	Reflect.set(editor, "autocompleteList", list);
+	Reflect.set(editor, "autocompleteState", "regular");
+
+	return list;
+}
+
+/**
+ * Creates a left click event at `x`, `y` of the editor rendered at width 40 with `height` lines.
+ */
+function createClick(x: number, y: number, height: number): TuiMouseEvent {
+	return {
+		type: "click",
+		button: "left",
+		x,
+		y,
+		screenX: x,
+		screenY: y,
+		width: 40,
+		height,
+		shift: false,
+		alt: false,
+		ctrl: false,
+	};
 }
 
 /**

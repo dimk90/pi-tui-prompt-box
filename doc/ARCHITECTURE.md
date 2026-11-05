@@ -88,6 +88,13 @@ autocomplete lines go below the box, moved left by Pi's 2-column item prefix so
 the item text aligns with the input text. Styled content may reset all attributes, so every reset
 inside a box row is followed by the box background again.
 
+Pi's editor maps mouse events with its own layout, so `handleMouse()` maps
+them back with the box geometry of the last render: text rows are moved left
+by the text indent, autocomplete rows also up by the two extra box rows, and
+the width is the inner text width. Box rows without text (top padding, blank,
+status, half row) are passed on the base top border row, where Pi only takes
+focus. When the last render fell back to the base editor, events pass unchanged.
+
 The accent bar and the thinking level use the editor `borderColor`. Pi
 copies it to the editor and updates it when the thinking level or bash mode
 changes, so the box never computes it. Bash mode for the status line is

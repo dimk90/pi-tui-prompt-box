@@ -3,7 +3,15 @@
  */
 
 import { CustomEditor, type KeybindingsManager } from "@earendil-works/pi-coding-agent";
-import { type EditorTheme, stripTerminalSequences, type TUI, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import {
+	type EditorTheme,
+	stripTerminalSequences,
+	truncateToWidth,
+	type TUI,
+	type TuiMouseEvent,
+	type TuiMouseEventResult,
+	visibleWidth,
+} from "@earendil-works/pi-tui";
 
 import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
 import type { ReadRightPadding } from "./scrollbar-padding.ts";
@@ -17,7 +25,14 @@ const BAR_WIDTH = 1;
 // Pi's select list starts every item with a 2-column prefix (`→ ` or spaces); the list is moved left by it,
 // so the item text starts in the same column as the input text
 const SELECT_PREFIX_WIDTH = 2;
-const AUTOCOMPLETE_INDENT = LEFT_MARGIN + BAR_WIDTH + INNER_PADDING - SELECT_PREFIX_WIDTH;
+const TEXT_INDENT = LEFT_MARGIN + BAR_WIDTH + INNER_PADDING;
+const AUTOCOMPLETE_INDENT = TEXT_INDENT - SELECT_PREFIX_WIDTH;
+// Box rows between the text lines and the autocomplete lines (blank, status, half row), where the base
+// editor has only its bottom border
+const ROWS_AFTER_TEXT = 3;
+const BASE_ROWS_AFTER_TEXT = 1;
+// Base editor row of its top border; mouse events on box rows without text are passed on this row
+const BASE_BORDER_ROW = 0;
 // Spaces between the status line text and Pi's busy indicator
 const BUSY_GAP = 2;
 // Pi's default working message, also with the interrupt hint Pi adds after an extension reload
@@ -37,6 +52,14 @@ export type RenderStatus = (barColor: (text: string) => string, bashMode: BashMo
 type StatusIndicator = NonNullable<Parameters<CustomEditor["setWorkingStatusIndicator"]>[0]>;
 
 /**
+ * Box geometry of the last render, used to map mouse events to the base editor layout.
+ */
+interface BoxLayout {
+	textWidth: number;
+	textLineCount: number;
+}
+
+/**
  * Main editor drawn as a filled box with a left accent bar and a status line inside.
  *
  * The base editor renders the text lines; this class replaces its borders and
@@ -51,6 +74,8 @@ export class PromptBoxEditor extends CustomEditor {
 	private readonly renderStatus: RenderStatus;
 	private readonly readRightPadding: ReadRightPadding;
 	private statusIndicator: StatusIndicator | undefined;
+	// Undefined when the last render fell back to the base editor layout
+	private boxLayout: BoxLayout | undefined;
 
 	constructor(
 		tui: TUI,
@@ -77,14 +102,17 @@ export class PromptBoxEditor extends CustomEditor {
 	override render(width: number): string[] {
 		const rightMargin = RIGHT_MARGIN + this.readRightPadding();
 		const textWidth = width - LEFT_MARGIN - rightMargin - BAR_WIDTH - 2 * INNER_PADDING;
-		if (textWidth < 1)
+		if (textWidth < 1) {
+			this.boxLayout = undefined;
 			return super.render(width);
+		}
 
 		// Base layout: top border, text lines, bottom border, autocomplete lines
 		const baseLines = super.render(textWidth);
 		const bottomBorderIndex = baseLines.indexOf(BOTTOM_BORDER_MARKER);
 		const textLines = baseLines.slice(1, bottomBorderIndex);
 		const autocompleteLines = baseLines.slice(bottomBorderIndex + 1);
+		this.boxLayout = { textWidth, textLineCount: textLines.length };
 
 		const boxWidth = width - LEFT_MARGIN - rightMargin - BAR_WIDTH;
 		const barColor = this.borderColor;
@@ -98,6 +126,27 @@ export class PromptBoxEditor extends CustomEditor {
 			renderHalfRow("╹", "▀", boxWidth, rightMargin, barColor),
 			...autocompleteLines.map((line) => " ".repeat(AUTOCOMPLETE_INDENT) + line),
 		];
+	}
+
+	/**
+	 * Passes the mouse event to the base editor in its own layout, so clicks place the cursor under the pointer
+	 * and select autocomplete items. Box rows without text (top padding, blank, status, half row) are passed on
+	 * the base top border row, so the box takes focus there as on Pi's borders.
+	 */
+	override handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+		const layout = this.boxLayout;
+		if (!layout)
+			return super.handleMouse(event);
+
+		const autocompleteRow = 1 + layout.textLineCount + ROWS_AFTER_TEXT;
+		const rowShift = ROWS_AFTER_TEXT - BASE_ROWS_AFTER_TEXT;
+		const baseEvent = { ...event, width: layout.textWidth, height: event.height - rowShift };
+		if (event.y >= autocompleteRow)
+			return super.handleMouse({ ...baseEvent, x: event.x - AUTOCOMPLETE_INDENT, y: event.y - rowShift });
+
+		const y = event.y <= layout.textLineCount ? event.y : BASE_BORDER_ROW;
+
+		return super.handleMouse({ ...baseEvent, x: event.x - TEXT_INDENT, y });
 	}
 
 	/**

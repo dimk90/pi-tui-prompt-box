@@ -13,6 +13,7 @@
 * `[ui]` Indent the chat, queued messages, and widgets by the box margin
 * `[ui]` Keep the chat clear of Pi's fullscreen `auto` scrollbar; box and footer align
 * `[ui]` Align the autocomplete item text with the input text
+* `[ui]` Map mouse clicks on the box to the input text and the autocomplete list
 
 
 ## [0.0.1] - 01.11.2026

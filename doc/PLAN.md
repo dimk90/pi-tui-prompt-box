@@ -8,7 +8,8 @@
     - On quit Pi stops the TUI before `session_shutdown`, so the extension can't fix it cleanly.
 - [x] Adjust padding for autocompletion list (reduce padding by 2 columns)?
   - Item text now starts in the input text column; the `→` prefix sits in the inner padding.
-- [ ] Fix mouse clicks on the prompt box in fullscreen mode.
+- [x] Fix mouse clicks on the prompt box in fullscreen mode.
+  - `PromptBoxEditor.handleMouse()` maps events to the base editor layout of the last render.
   - `PromptBoxEditor` does not override `handleMouse`, so Pi's editor maps clicks with its own layout.
   - Input text: clicks land 4 columns off (left margin, accent bar, inner padding).
   - Autocomplete list: 2 columns off, and rows off by 2 (blank, status, and half rows vs Pi's bottom border).
