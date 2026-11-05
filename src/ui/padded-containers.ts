@@ -1,6 +1,6 @@
 /**
- * Pi's chat, queued messages, and extension widgets moved right by the box margins, so they start in the same
- * column as the prompt box, and kept clear of Pi's fullscreen scrollbar.
+ * Pi's chat, queued messages, extension widgets, and the dialogs shown in place of the editor moved right by the
+ * box margins, so they start in the same column as the prompt box, and kept clear of Pi's fullscreen scrollbar.
  */
 
 import type { Component, TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
@@ -25,10 +25,13 @@ interface ParentComponent extends Component {
 }
 
 /**
- * Moves Pi's chat, queued messages, and widgets above and below the editor right by the box margins.
+ * Moves Pi's chat, queued messages, widgets above and below the editor, and the dialogs shown in place of the
+ * editor right by the box margins.
  *
  * Pi gives extensions no references to these containers, so they are found by the shape of the TUI tree
  * under `root`, starting from the root child that holds `editor`. Nothing is changed when the shape differs.
+ * The editor container is padded only while it does not hold `editor`, which draws its own margins: Pi shows
+ * its selectors and extension dialogs in the same container, in place of the editor.
  * In fullscreen mode with the `auto` scrollbar, they are also narrowed by the scrollbar width; see
  * {@link readScrollbarPadding}.
  *
@@ -37,11 +40,14 @@ interface ParentComponent extends Component {
  */
 export function padPiContainers(root: Component, editor: Component): (() => void) | undefined {
 	const containers = findPiContainers(root, editor);
-	if (!containers || containers.some(isPadded))
+	if (!containers || [...containers.alwaysPadded, containers.editorContainer].some(isPadded))
 		return undefined;
 
 	const readRightPadding = () => readScrollbarPadding(root);
-	const restoreFunctions = containers.map((container) => padComponent(container, readRightPadding));
+	const restoreFunctions = containers.alwaysPadded.map((container) => padComponent(container, readRightPadding));
+	const { editorContainer } = containers;
+	const isDialogShown = () => !editorContainer.children.includes(editor);
+	restoreFunctions.push(padComponent(editorContainer, readRightPadding, isDialogShown));
 	return () => {
 		for (const restore of restoreFunctions) restore();
 	};
@@ -54,16 +60,22 @@ export function padPiContainers(root: Component, editor: Component): (() => void
  * Only this instance is changed, not its class, so Pi keeps its own reference and keeps updating it, in
  * both regular and fullscreen mode. Mouse events are passed in the component coordinates; events on the
  * margins are not handled. `readRightPadding` is called on every render and mouse event, so the padding
- * follows Pi's mode and settings.
+ * follows Pi's mode and settings. `shouldPad` is called the same way; while it returns `false`, the component
+ * renders and gets mouse events unchanged.
  *
  * @returns A function that removes the padding.
  */
-export function padComponent(component: Component, readRightPadding: ReadRightPadding = () => 0): () => void {
+export function padComponent(
+	component: Component,
+	readRightPadding: ReadRightPadding = () => 0,
+	shouldPad: () => boolean = () => true,
+): () => void {
 	const render = component.render.bind(component);
 	const handleMouse = component.handleMouse?.bind(component);
 	const readInnerWidth = (width: number) => width - LEFT_MARGIN - RIGHT_MARGIN - readRightPadding();
 
 	component.render = (width: number): string[] => {
+		if (!shouldPad()) return render(width);
 		const innerWidth = readInnerWidth(width);
 		if (innerWidth < 1) return render(width);
 		const leftMargin = " ".repeat(LEFT_MARGIN);
@@ -71,6 +83,7 @@ export function padComponent(component: Component, readRightPadding: ReadRightPa
 	};
 	if (handleMouse) {
 		component.handleMouse = (event: TuiMouseEvent): TuiMouseEventResult | undefined => {
+			if (!shouldPad()) return handleMouse(event);
 			const innerWidth = readInnerWidth(event.width);
 			if (innerWidth < 1) return handleMouse(event);
 			const x = event.x - LEFT_MARGIN;
@@ -86,20 +99,33 @@ export function padComponent(component: Component, readRightPadding: ReadRightPa
 }
 
 /**
- * Finds Pi's chat, queued messages, and widget containers, or returns `undefined` when the tree has another shape.
+ * Pi's containers that get the padding.
  */
-function findPiContainers(root: Component, editor: Component): Component[] | undefined {
+interface PiContainers {
+	/** Chat, queued messages, and widgets above and below the editor. */
+	alwaysPadded: Component[];
+	/** Holds the editor, or a selector or extension dialog shown in its place. */
+	editorContainer: ParentComponent;
+}
+
+/**
+ * Finds Pi's chat, queued messages, widget, and editor containers, or returns `undefined` when the tree has
+ * another shape.
+ */
+function findPiContainers(root: Component, editor: Component): PiContainers | undefined {
 	if (!isParent(root) || root.children.length !== ROOT_CHILD_COUNT) return undefined;
 	if (root.children.some((child) => !isParent(child))) return undefined;
 	const rootChildren = root.children as ParentComponent[];
-	if (!rootChildren[EDITOR_INDEX]?.children.includes(editor)) return undefined;
+	const editorContainer = rootChildren[EDITOR_INDEX];
+	if (!editorContainer?.children.includes(editor)) return undefined;
 
 	const document = rootChildren[0];
 	if (!document || document.children.length !== DOCUMENT_CHILD_COUNT) return undefined;
 	const chat = document.children[CHAT_INDEX];
 	if (!chat || !isParent(chat)) return undefined;
 
-	return [chat, ...PADDED_ROOT_INDEXES.map((index) => rootChildren[index] as Component)];
+	const alwaysPadded = [chat, ...PADDED_ROOT_INDEXES.map((index) => rootChildren[index] as Component)];
+	return { alwaysPadded, editorContainer };
 }
 
 /**

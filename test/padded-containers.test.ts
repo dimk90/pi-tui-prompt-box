@@ -24,6 +24,37 @@ test("padPiContainers pads the chat, queued messages, and widgets, but not the h
 	assert.equal(Object.hasOwn(tree.chat, "render"), false);
 });
 
+test("padPiContainers pads the editor container only while a dialog replaces the editor", () => {
+	const tree = createTree();
+	const events: TuiMouseEvent[] = [];
+	const dialog: Component = {
+		render: () => ["dialog"],
+		handleMouse(event) {
+			events.push(event);
+			return { handled: true };
+		},
+		invalidate() {},
+	};
+	const restore = padPiContainers(tree.root, tree.editor);
+	assert.ok(restore);
+
+	assert.deepEqual(tree.editorContainer.render(80), ["line"]);
+
+	tree.editorContainer.clear();
+	tree.editorContainer.addChild(dialog);
+	assert.deepEqual(tree.editorContainer.render(80), [`${INDENT}dialog`]);
+	tree.editorContainer.handleMouse?.(createMouseEvent(LEFT_MARGIN + 5, 80));
+	assert.equal(events[0]?.x, 5);
+	assert.equal(events[0]?.width, 80 - LEFT_MARGIN - RIGHT_MARGIN);
+
+	tree.editorContainer.clear();
+	tree.editorContainer.addChild(tree.editor);
+	assert.deepEqual(tree.editorContainer.render(80), ["line"]);
+
+	restore();
+	assert.equal(Object.hasOwn(tree.editorContainer, "render"), false);
+});
+
 test("padPiContainers leaves a column for the fullscreen scrollbar in auto mode only", () => {
 	const tree = createTree();
 	const scrollView = new ScrollView(tree.document, { scrollbar: "auto" });
@@ -98,6 +129,7 @@ interface Tree {
 	root: Container;
 	document: Container;
 	editor: Component;
+	editorContainer: Container;
 	header: Container;
 	chat: Container;
 	queuedMessages: Container;
@@ -130,7 +162,7 @@ function createTree(): Tree {
 	const root = new Container();
 	for (const child of [document, queuedMessages, status, widgetsAbove, editorContainer, widgetsBelow, footer])
 		root.addChild(child);
-	return { root, document, editor, header, chat, queuedMessages, status, widgetsAbove, widgetsBelow, footer };
+	return { root, document, editor, editorContainer, header, chat, queuedMessages, status, widgetsAbove, widgetsBelow, footer };
 }
 
 /** Container with one `line` child. */

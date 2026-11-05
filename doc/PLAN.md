@@ -13,8 +13,10 @@
   - `PromptBoxEditor` does not override `handleMouse`, so Pi's editor maps clicks with its own layout.
   - Input text: clicks land 4 columns off (left margin, accent bar, inner padding).
   - Autocomplete list: 2 columns off, and rows off by 2 (blank, status, and half rows vs Pi's bottom border).
-- [ ] Check if non-fullscreen dialog/overlay can be padded as well as the chat (session) output area.
+- [x] Check if non-fullscreen dialog/overlay can be padded as well as the chat (session) output area.
   - E.g. permission-system messages.
+  - Dialogs in place of the editor (selectors, extension dialogs) are padded like the chat.
+  - Overlays are left unchanged: their extensions choose the position.
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
   - Show them in the padding rows or in the status line.

@@ -9,7 +9,7 @@ state, and the required invariants. The look of the box is specified in
 
 ```text
 session_start    → install PromptBoxEditor via setEditorComponent,
-                   pad Pi's chat, queued messages, and widgets,
+                   pad Pi's chat, queued messages, widgets, and dialogs,
                    wrap Pi's built-in footer in PaddedFooter via setFooter
 session_shutdown → remove the container padding, except on quit
 ```
@@ -34,6 +34,13 @@ messages, status, widgets above, editor, widgets below, and footer. The
 editor child must hold the `PromptBoxEditor`, and the document must hold three
 containers: header, loaded resources, and chat. If the tree has another shape,
 nothing is changed. The header, loaded resources, and status stay unpadded.
+
+Pi shows its selectors (model, settings, login) and the extension dialogs
+(`select`, `confirm`, `input`, and `custom` without `overlay`) in the editor
+container, in place of the editor. So the editor container is padded too, but
+only while it does not hold the `PromptBoxEditor`, which draws its own margins.
+Overlays are drawn over the whole screen at the positions their extensions
+choose, so they stay unchanged.
 
 The containers can't be replaced in the tree: fullscreen mode builds its
 layout from the container objects, not from the TUI children. So
@@ -72,7 +79,7 @@ footers from other extensions are never wrapped; hiding their parts is their job
 | `src/index.ts`                | Wiring: factory and the `session_start` handler.                 |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.    |
-| `src/ui/padded-containers.ts` | Pi's chat, queued messages, and widgets moved by the margins.    |
+| `src/ui/padded-containers.ts` | Pi's chat, queued messages, widgets, dialogs moved by margins.   |
 | `src/ui/scrollbar-padding.ts` | Right padding for Pi's fullscreen `auto` scrollbar.              |
 | `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed.  |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
