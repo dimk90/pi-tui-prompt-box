@@ -14,6 +14,10 @@ export const LEFT_MARGIN = 1;
 export const RIGHT_MARGIN = 0;
 const INNER_PADDING = 2;
 const BAR_WIDTH = 1;
+// Pi's select list starts every item with a 2-column prefix (`→ ` or spaces); the list is moved left by it,
+// so the item text starts in the same column as the input text
+const SELECT_PREFIX_WIDTH = 2;
+const AUTOCOMPLETE_INDENT = LEFT_MARGIN + BAR_WIDTH + INNER_PADDING - SELECT_PREFIX_WIDTH;
 // Spaces between the status line text and Pi's busy indicator
 const BUSY_GAP = 2;
 // Pi's default working message, also with the interrupt hint Pi adds after an extension reload
@@ -92,7 +96,7 @@ export class PromptBoxEditor extends CustomEditor {
 			renderBoxRow("", textWidth, rightMargin, barColor),
 			renderBoxRow(status, textWidth, rightMargin, barColor),
 			renderHalfRow("╹", "▀", boxWidth, rightMargin, barColor),
-			...autocompleteLines.map((line) => " ".repeat(LEFT_MARGIN + BAR_WIDTH + INNER_PADDING) + line),
+			...autocompleteLines.map((line) => " ".repeat(AUTOCOMPLETE_INDENT) + line),
 		];
 	}
 

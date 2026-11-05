@@ -4,6 +4,7 @@ import { test } from "node:test";
 import type { KeybindingsManager } from "@earendil-works/pi-coding-agent";
 import {
 	type EditorTheme,
+	SelectList,
 	stripTerminalSequences,
 	truncateToWidth,
 	type TUI,
@@ -60,6 +61,21 @@ test("PromptBoxEditor leaves the right padding after the box", () => {
 	assert.equal(renderStatusRow(editor, BOX_COLUMNS + 1 + 3), "mod");
 	const halfRow = stripTerminalSequences(lines.at(-1) ?? "");
 	assert.ok(halfRow.endsWith("▀ "), "one empty column after the box");
+});
+
+test("PromptBoxEditor aligns the autocomplete item text with the input text", () => {
+	const editor = createEditor();
+	editor.setText("/mo");
+	const plain = (text: string) => text;
+	const theme = { selectedPrefix: plain, selectedText: plain, description: plain, scrollInfo: plain, noMatch: plain };
+	// The base editor keeps the autocomplete state private; open the list as its trigger would
+	Reflect.set(editor, "autocompleteList", new SelectList([{ value: "model", label: "model" }], 5, theme));
+	Reflect.set(editor, "autocompleteState", "regular");
+
+	const lines = editor.render(40).map((line) => stripTerminalSequences(line));
+	const inputColumn = (lines[1] ?? "").indexOf("/mo");
+	const autocompleteRow = lines.at(-1) ?? "";
+	assert.equal(autocompleteRow.indexOf("→ model") + 2, inputColumn);
 });
 
 /**

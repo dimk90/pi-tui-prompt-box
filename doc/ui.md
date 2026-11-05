@@ -42,6 +42,11 @@ Legend:
   - `!!` input (output kept out of the model context) shows `Bash (no context)`;
     `(no context)` is theme `dim`.
 
+Autocomplete list (slash commands, file paths): below the box, outside its
+background. It is moved left by the width of Pi's item prefix (`→ ` or two
+spaces), so the item text starts in the same column as the input text, and the
+`→` of the selected item sits in the inner padding.
+
 Footer: Pi's built-in footer, below the box, keeps its content but is moved
 right by the box margins, so it starts in the same column as the accent bar.
 The model part on the right of its stats line (`(provider) model • level`) is

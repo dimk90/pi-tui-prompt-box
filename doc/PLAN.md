@@ -6,7 +6,12 @@
     - Pi's `TuiMainScreen.beforeTerminalStop()` writes a plain space at the cursor after an SGR reset.
     - Also on fullscreen exit with `fullscreenExitOutput: "transcript"` (Pi's default).
     - On quit Pi stops the TUI before `session_shutdown`, so the extension can't fix it cleanly.
-- [ ] Adjust padding for autocompletion list (reduce padding by 2 columns)?
+- [x] Adjust padding for autocompletion list (reduce padding by 2 columns)?
+  - Item text now starts in the input text column; the `→` prefix sits in the inner padding.
+- [ ] Fix mouse clicks on the prompt box in fullscreen mode.
+  - `PromptBoxEditor` does not override `handleMouse`, so Pi's editor maps clicks with its own layout.
+  - Input text: clicks land 4 columns off (left margin, accent bar, inner padding).
+  - Autocomplete list: 2 columns off, and rows off by 2 (blank, status, and half rows vs Pi's bottom border).
 - [ ] Check if non-fullscreen dialog/overlay can be padded as well as the chat (session) output area.
   - E.g. permission-system messages.
 - [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).

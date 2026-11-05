@@ -83,7 +83,9 @@ footers from other extensions are never wrapped; hiding their parts is their job
 inner text width. The base output is top border, text lines, bottom border,
 and autocomplete lines. `renderBottomBorder()` returns a marker so `render()`
 can find where the text lines end; both base borders are dropped. The top one
-is replaced by an empty box row, the bottom one by a half-block row. Styled content may reset all attributes, so every reset
+is replaced by an empty box row, the bottom one by a half-block row. The
+autocomplete lines go below the box, moved left by Pi's 2-column item prefix so
+the item text aligns with the input text. Styled content may reset all attributes, so every reset
 inside a box row is followed by the box background again.
 
 The accent bar and the thinking level use the editor `borderColor`. Pi
