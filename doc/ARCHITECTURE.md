@@ -146,7 +146,8 @@ indicator. The extension keeps the function that removes the container padding. 
 
 - Normal turns are unchanged: the extension adds nothing to provider requests.
 - The extension starts no timers; busy indicator animation is Pi's.
-- Widths below the box minimum fall back to the base editor rendering.
+- Widths below the box minimum fall back to the base editor rendering, with
+  Pi's borders.
 - The footer content stays Pi's: `PaddedFooter` only narrows and indents it
   and removes the exactly matched model part, and never disposes the built-in
   footer, which Pi owns.

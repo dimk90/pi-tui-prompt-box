@@ -106,6 +106,8 @@ export class PromptBoxEditor extends CustomEditor {
 	private hiddenBelow = 0;
 	// Undefined when the last render fell back to the base editor layout
 	private boxLayout: BoxLayout | undefined;
+	// Set while the base editor renders its own layout below the box minimum width, so it keeps Pi's borders
+	private renderingFallback = false;
 
 	constructor(
 		tui: TUI,
@@ -140,13 +142,19 @@ export class PromptBoxEditor extends CustomEditor {
 		this.tui.requestRender();
 	}
 
-	// The base top border is dropped; only its hidden line count is kept
-	protected override renderTopBorder(_width: number, hiddenLineCount: number): string {
+	// In the box layout the base top border is dropped; only its hidden line count is kept
+	protected override renderTopBorder(width: number, hiddenLineCount: number): string {
+		if (this.renderingFallback)
+			return super.renderTopBorder(width, hiddenLineCount);
+
 		this.hiddenAbove = hiddenLineCount;
 		return "";
 	}
 
-	protected override renderBottomBorder(_width: number, hiddenLineCount: number): string {
+	protected override renderBottomBorder(width: number, hiddenLineCount: number): string {
+		if (this.renderingFallback)
+			return super.renderBottomBorder(width, hiddenLineCount);
+
 		this.hiddenBelow = hiddenLineCount;
 		return BOTTOM_BORDER_MARKER;
 	}
@@ -159,7 +167,7 @@ export class PromptBoxEditor extends CustomEditor {
 		const textWidth = width - margins.left - margins.right - BAR_WIDTH - 2 * INNER_PADDING;
 		if (textWidth < 1) {
 			this.boxLayout = undefined;
-			return super.render(width);
+			return this.renderFallback(width);
 		}
 
 		// Base layout: top border, text lines, bottom border, autocomplete lines
@@ -210,6 +218,18 @@ export class PromptBoxEditor extends CustomEditor {
 		const y = event.y <= layout.textLineCount ? event.y : BASE_BORDER_ROW;
 
 		return super.handleMouse({ ...baseEvent, x: event.x - textIndent, y });
+	}
+
+	/**
+	 * Renders the base editor layout with Pi's borders, for widths below the box minimum.
+	 */
+	private renderFallback(width: number): string[] {
+		this.renderingFallback = true;
+		try {
+			return super.render(width);
+		} finally {
+			this.renderingFallback = false;
+		}
 	}
 
 	/**

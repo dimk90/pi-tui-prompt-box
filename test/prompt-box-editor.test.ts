@@ -103,6 +103,22 @@ test("PromptBoxEditor falls back to the base editor when Pi's editor paddingX le
 	assert.ok(lines.every((line) => !line.includes("┃")), "no box");
 });
 
+test("PromptBoxEditor keeps Pi's borders in the fallback and draws the box again when wide enough", () => {
+	const editor = createEditor();
+	editor.setText("hi");
+
+	const border = "─".repeat(BOX_COLUMNS);
+	const lines = editor.render(BOX_COLUMNS).map((line) => stripTerminalSequences(line));
+	assert.equal(lines[0], border, "Pi's top border");
+	assert.equal(lines.at(-1), border, "Pi's bottom border");
+	for (const line of lines)
+		assert.equal(visibleWidth(line), BOX_COLUMNS);
+
+	const boxLines = editor.render(BOX_COLUMNS + 1).map((line) => stripTerminalSequences(line));
+	assert.ok(boxLines.every((line) => !line.includes("─")), "no Pi borders in the box");
+	assert.equal(boxLines[1]?.trim(), "┃  h");
+});
+
 test("PromptBoxEditor shows Pi's scroll indicators right-aligned in the padding rows", () => {
 	const editor = createEditor();
 	const lines = Array.from({ length: 30 }, (_, index) => `line ${index}`);
