@@ -65,6 +65,26 @@ test("PromptBoxEditor leaves the right padding after the box", () => {
 	assert.ok(halfRow.endsWith("▀ "), "one empty column after the box");
 });
 
+test("PromptBoxEditor shows Pi's scroll indicators right-aligned in the padding rows", () => {
+	const editor = createEditor();
+	const lines = Array.from({ length: 30 }, (_, index) => `line ${index}`);
+	editor.setText(lines.join("\n"));
+	editor.render(40);
+	// The terminal stub has 40 rows, so the editor shows 12 lines; the cursor on line 10 shows lines 10 to 21
+	const state = Reflect.get(editor, "state") as { cursorLine: number };
+	state.cursorLine = 10;
+
+	const rows = editor.render(40).map((line) => stripTerminalSequences(line));
+	const blankRow = rows.length - 3;
+	assert.ok(rows[0]?.endsWith("10 ↑ "), "↑ in the top padding row, 1 column before the box edge");
+	assert.ok(rows[blankRow]?.endsWith("8 ↓ "), "↓ in the blank row above the status line");
+
+	editor.setText("short");
+	const shortRows = editor.render(40).map((line) => stripTerminalSequences(line));
+	assert.equal(shortRows[0]?.trim(), "┃");
+	assert.equal(shortRows[shortRows.length - 3]?.trim(), "┃");
+});
+
 test("PromptBoxEditor aligns the autocomplete item text with the input text", () => {
 	const editor = createEditor();
 	editor.setText("/mo");

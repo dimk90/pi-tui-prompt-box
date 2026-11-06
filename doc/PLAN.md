@@ -1,25 +1,8 @@
 # TODO
 
-- [x] Check the prompt box in Pi's regular TUI mode (`--tui-mode`); adjust it or disable it there.
-  - Kept enabled; runtime mode switches work (Pi gives components a TUI proxy).
-  - Known issue, left as is: on exit the cursor cell shows the terminal background (see `doc/issue-1.png`).
-    - Pi's `TuiMainScreen.beforeTerminalStop()` writes a plain space at the cursor after an SGR reset.
-    - Also on fullscreen exit with `fullscreenExitOutput: "transcript"` (Pi's default).
-    - On quit Pi stops the TUI before `session_shutdown`, so the extension can't fix it cleanly.
-- [x] Adjust padding for autocompletion list (reduce padding by 2 columns)?
-  - Item text now starts in the input text column; the `→` prefix sits in the inner padding.
-- [x] Fix mouse clicks on the prompt box in fullscreen mode.
-  - `PromptBoxEditor.handleMouse()` maps events to the base editor layout of the last render.
-  - `PromptBoxEditor` does not override `handleMouse`, so Pi's editor maps clicks with its own layout.
-  - Input text: clicks land 4 columns off (left margin, accent bar, inner padding).
-  - Autocomplete list: 2 columns off, and rows off by 2 (blank, status, and half rows vs Pi's bottom border).
-- [x] Check if non-fullscreen dialog/overlay can be padded as well as the chat (session) output area.
-  - E.g. permission-system messages.
-  - Dialogs in place of the editor (selectors, extension dialogs) are padded like the chat.
-  - Overlays are left unchanged: their extensions choose the position.
-- [ ] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
+- [x] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
   - Pi draws them in the top and bottom borders, which the box drops.
-  - Show them in the padding rows or in the status line.
+  - Shown as `N ↑` / `N ↓`, right-aligned in the padding rows, in theme `borderMuted`.
 - [ ] Handle Pi's editor `paddingX` setting.
   - `setEditorComponent` copies it over our `paddingX: 0`, so text gets extra indent inside the box.
   - Ignore it or include it in the width math.

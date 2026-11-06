@@ -24,6 +24,11 @@ Legend:
   - `╹` — upper half of the accent bar, same color as `┃`.
 - The box has no other borders; only the background color separates it from the terminal.
 - Blank line between the input and the status line.
+- Scroll indicators: when the input has more lines than the box shows,
+  `N ↑` goes in the top padding row and `N ↓` in the blank line, where `N` is
+  the number of hidden lines above or below. They are right-aligned with one
+  column left before the right edge of the box, so they extend into the inner
+  padding, in theme `borderMuted`. Pi's word `more` is dropped.
 - Status line:
   - `medium` — thinking level as Pi names it (lower case), same color as the accent bar.
   - `·` — separator, theme `dim`.

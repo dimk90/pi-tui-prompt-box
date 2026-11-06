@@ -40,6 +40,12 @@ const DEFAULT_WORKING_MESSAGE = /^Working( \(.+ to interrupt\))?$/;
 // Wide enough for the default working message; Pi pads the rendered indicator to this width
 const MESSAGE_CHECK_WIDTH = 200;
 
+// Scroll indicator arrows, as Pi shows them in its borders
+const SCROLL_UP = "↑";
+const SCROLL_DOWN = "↓";
+// Columns between a scroll indicator and the right edge of the box; it extends into the inner padding
+const SCROLL_INDICATOR_GAP = 1;
+
 // Returned by renderBottomBorder() so render() can find where the text lines end
 const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
 
@@ -69,11 +75,19 @@ interface BoxLayout {
  * With `embedWorkingStatus`, Pi passes its busy indicators (working, retry,
  * compaction, branch summary) to the editor, which shows them in the status line.
  * `readRightPadding` is called on every render and adds columns to the right margin.
+ * Pi's scroll indicators (`N ↑`, `N ↓`) go right-aligned into the padding rows
+ * around the text, in the theme `borderColor` (Pi's `borderMuted`).
  */
 export class PromptBoxEditor extends CustomEditor {
 	private readonly renderStatus: RenderStatus;
+	// The base class keeps the theme private; its borderColor stays Pi's `borderMuted` while Pi changes the
+	// editor borderColor for the thinking level and bash mode
+	private readonly editorTheme: EditorTheme;
 	private readonly readRightPadding: ReadRightPadding;
 	private statusIndicator: StatusIndicator | undefined;
+	// Text lines hidden above and below the visible ones, set by the base render through the border methods
+	private hiddenAbove = 0;
+	private hiddenBelow = 0;
 	// Undefined when the last render fell back to the base editor layout
 	private boxLayout: BoxLayout | undefined;
 
@@ -86,6 +100,7 @@ export class PromptBoxEditor extends CustomEditor {
 	) {
 		super(tui, theme, keybindings, { paddingX: 0, embedWorkingStatus: true });
 		this.renderStatus = renderStatus;
+		this.editorTheme = theme;
 		this.readRightPadding = readRightPadding;
 	}
 
@@ -95,7 +110,14 @@ export class PromptBoxEditor extends CustomEditor {
 		this.statusIndicator = indicator;
 	}
 
-	protected override renderBottomBorder(): string {
+	// The base top border is dropped; only its hidden line count is kept
+	protected override renderTopBorder(_width: number, hiddenLineCount: number): string {
+		this.hiddenAbove = hiddenLineCount;
+		return "";
+	}
+
+	protected override renderBottomBorder(_width: number, hiddenLineCount: number): string {
+		this.hiddenBelow = hiddenLineCount;
 		return BOTTOM_BORDER_MARKER;
 	}
 
@@ -118,10 +140,13 @@ export class PromptBoxEditor extends CustomEditor {
 		const barColor = this.borderColor;
 		const status = this.renderStatusLine(textWidth, barColor);
 
+		const scrollUp = this.renderScrollIndicator(SCROLL_UP, this.hiddenAbove, textWidth);
+		const scrollDown = this.renderScrollIndicator(SCROLL_DOWN, this.hiddenBelow, textWidth);
+
 		return [
-			renderBoxRow("", textWidth, rightMargin, barColor),
+			renderBoxRow(scrollUp, textWidth, rightMargin, barColor),
 			...textLines.map((line) => renderBoxRow(line, textWidth, rightMargin, barColor)),
-			renderBoxRow("", textWidth, rightMargin, barColor),
+			renderBoxRow(scrollDown, textWidth, rightMargin, barColor),
 			renderBoxRow(status, textWidth, rightMargin, barColor),
 			renderHalfRow("╹", "▀", boxWidth, rightMargin, barColor),
 			...autocompleteLines.map((line) => " ".repeat(AUTOCOMPLETE_INDENT) + line),
@@ -147,6 +172,21 @@ export class PromptBoxEditor extends CustomEditor {
 		const y = event.y <= layout.textLineCount ? event.y : BASE_BORDER_ROW;
 
 		return super.handleMouse({ ...baseEvent, x: event.x - TEXT_INDENT, y });
+	}
+
+	/**
+	 * Renders Pi's scroll indicator (`N ↑`) right-aligned `SCROLL_INDICATOR_GAP` columns before the box edge, so
+	 * it extends into the inner padding, or an empty row content when no lines are hidden. The label is cut from
+	 * the right when the box is too narrow.
+	 */
+	private renderScrollIndicator(direction: string, hiddenLineCount: number, textWidth: number): string {
+		if (hiddenLineCount < 1)
+			return "";
+
+		const indicatorWidth = textWidth + INNER_PADDING - SCROLL_INDICATOR_GAP;
+		const label = truncateToWidth(`${hiddenLineCount} ${direction}`, indicatorWidth, "");
+
+		return " ".repeat(indicatorWidth - visibleWidth(label)) + this.editorTheme.borderColor(label);
 	}
 
 	/**
@@ -225,6 +265,7 @@ function renderHalfRow(
 
 /**
  * Renders one full-height box row: accent bar, padding and content on the box background.
+ * Content wider than `textWidth` extends into the right inner padding; only scroll indicators do that.
  */
 function renderBoxRow(
 	content: string,
@@ -235,9 +276,9 @@ function renderBoxRow(
 	const leftMargin = " ".repeat(LEFT_MARGIN);
 	const rightMargin = " ".repeat(rightMarginWidth);
 	const padding = " ".repeat(INNER_PADDING);
-	const fill = " ".repeat(Math.max(0, textWidth - visibleWidth(content)));
+	const fill = " ".repeat(Math.max(0, textWidth + INNER_PADDING - visibleWidth(content)));
 	// Styled content may reset all attributes, which would also drop the box background
 	const boxedContent = content.replaceAll(RESET, RESET + BOX_BG);
 
-	return `${leftMargin}${barColor("┃")}${RESET}${BOX_BG}${padding}${boxedContent}${fill}${padding}${RESET}${rightMargin}`;
+	return `${leftMargin}${barColor("┃")}${RESET}${BOX_BG}${padding}${boxedContent}${fill}${RESET}${rightMargin}`;
 }
