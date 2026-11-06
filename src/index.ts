@@ -26,6 +26,7 @@ export default function promptBox(pi: ExtensionAPI): void {
 				levelColor: barColor,
 				bashMode,
 				model: ctx.model,
+				getProviderName: (provider) => ctx.modelRegistry.getProviderDisplayName(provider),
 				thinkingLevel: pi.getThinkingLevel(),
 			});
 

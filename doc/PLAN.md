@@ -1,8 +1,6 @@
 # TODO
 
 - [ ] Decide what the status line shows when thinking is off (now `· Off`).
-- [ ] Use capitalization for provide name:
-  - The same approach as for the model name.
 - [ ] Dynamic background brightening function for prompt box:
   - background[prompt-box] = brighten(theme.background)
 - [ ] Add render tests for the editor.

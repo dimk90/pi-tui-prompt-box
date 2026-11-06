@@ -5,7 +5,7 @@
  ┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
  ┃░░█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
  ┃░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
- ┃░░Big░Pickle░OpenCode░·░medium░░⠏░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+ ┃░░Big░Pickle░OpenCode░Zen░·░medium░░⠏░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
  ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ 
                                                                             
 ```
@@ -33,7 +33,8 @@ Legend:
   - `medium` — thinking level as Pi names it (lower case), same color as the accent bar.
   - `·` — separator, theme `dim`.
   - `Big Pickle` — model name, theme `text`.
-  - `OpenCode` — provider, theme `dim`.
+  - `OpenCode Zen` — provider display name as Pi's model registry names it
+    (`opencode` → `OpenCode Zen`), theme `dim`.
   - `⠏` — Pi's busy indicator, two spaces after the text: working,
     retry, compaction, or branch summary, with the message other extensions set.
     Pi's default working message (`Working`) is dropped, so a normal turn shows

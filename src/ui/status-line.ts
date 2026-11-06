@@ -21,6 +21,8 @@ export interface StatusLineOptions {
 	levelColor: (text: string) => string;
 	bashMode: BashMode;
 	model: ExtensionContext["model"];
+	/** Returns the display name of a provider id, like Pi's model registry: `opencode` → `OpenCode Zen`. */
+	getProviderName: (provider: string) => string;
 	thinkingLevel: string;
 }
 
@@ -29,7 +31,7 @@ export interface StatusLineOptions {
  * In bash mode, `Bash` replaces them. Pi's busy indicator is added by the editor.
  */
 export function formatStatus(options: StatusLineOptions): string {
-	const { theme, levelColor, bashMode, model, thinkingLevel } = options;
+	const { theme, levelColor, bashMode, model, getProviderName, thinkingLevel } = options;
 	if (bashMode === "context")
 		return levelColor("Bash");
 
@@ -37,7 +39,7 @@ export function formatStatus(options: StatusLineOptions): string {
 		return `${levelColor("Bash")}${theme.fg("dim", " (no context)")}`;
 
 	const modelText = model
-		? `${theme.fg("text", model.name)} ${theme.fg("dim", model.provider)}`
+		? `${theme.fg("text", model.name)} ${theme.fg("dim", getProviderName(model.provider))}`
 		: theme.fg("dim", "no model");
 	const separator = theme.fg("dim", " · ");
 	const level = levelColor(thinkingLevel);

@@ -74,15 +74,15 @@ footers from other extensions are never wrapped; hiding their parts is their job
 
 ## Module Boundaries
 
-| Path                          | Responsibility                                                   |
-| ----------------------------- | ---------------------------------------------------------------- |
-| `src/index.ts`                | Wiring: factory and the `session_start` handler.                 |
-| `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.     |
-| `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.    |
-| `src/ui/padded-containers.ts` | Pi's chat, queued messages, widgets, dialogs moved by margins.   |
-| `src/ui/scrollbar-padding.ts` | Right padding for Pi's fullscreen `auto` scrollbar.              |
-| `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed.  |
-| `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.    |
+| Path                          | Responsibility                                                  |
+| ----------------------------- | --------------------------------------------------------------- |
+| `src/index.ts`                | Wiring: factory and the `session_start` handler.                |
+| `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.    |
+| `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.   |
+| `src/ui/padded-containers.ts` | Pi's chat, queued messages, widgets, dialogs moved by margins.  |
+| `src/ui/scrollbar-padding.ts` | Right padding for Pi's fullscreen `auto` scrollbar.             |
+| `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed. |
+| `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.   |
 
 ## Editor Rendering
 
@@ -140,7 +140,8 @@ full, as is an indicator without a spinner frame.
 ## State
 
 No extension state; nothing is persisted. The editor keeps Pi's current status
-indicator. The extension keeps the function that removes the container padding. Model and thinking level are read from the context at render time.
+indicator. The extension keeps the function that removes the container padding.
+Model and thinking level are read from the context at render time.
 
 ## Required Invariants
 
