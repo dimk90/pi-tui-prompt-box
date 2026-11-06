@@ -17,7 +17,10 @@ import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
 import type { ReadRightPadding } from "./scrollbar-padding.ts";
 import type { BashMode } from "./status-line.ts";
 
-/** Terminal columns left empty on each side of the box; the footer uses them too. */
+/**
+ * Terminal columns left empty on each side of the box; the chat and the footer use them too.
+ * Pi's editor `paddingX` setting adds to them only for the box.
+ */
 export const LEFT_MARGIN = 1;
 export const RIGHT_MARGIN = 0;
 const INNER_PADDING = 2;
@@ -25,8 +28,8 @@ const BAR_WIDTH = 1;
 // Pi's select list starts every item with a 2-column prefix (`→ ` or spaces); the list is moved left by it,
 // so the item text starts in the same column as the input text
 const SELECT_PREFIX_WIDTH = 2;
-const TEXT_INDENT = LEFT_MARGIN + BAR_WIDTH + INNER_PADDING;
-const AUTOCOMPLETE_INDENT = TEXT_INDENT - SELECT_PREFIX_WIDTH;
+// Columns between the left margin and the input text
+const TEXT_OFFSET = BAR_WIDTH + INNER_PADDING;
 // Box rows between the text lines and the autocomplete lines (blank, status, half row), where the base
 // editor has only its bottom border
 const ROWS_AFTER_TEXT = 3;
@@ -61,8 +64,17 @@ type StatusIndicator = NonNullable<Parameters<CustomEditor["setWorkingStatusIndi
  * Box geometry of the last render, used to map mouse events to the base editor layout.
  */
 interface BoxLayout {
+	leftMargin: number;
 	textWidth: number;
 	textLineCount: number;
+}
+
+/**
+ * Terminal columns left empty on each side of the box.
+ */
+interface BoxMargins {
+	left: number;
+	right: number;
 }
 
 /**
@@ -75,6 +87,8 @@ interface BoxLayout {
  * With `embedWorkingStatus`, Pi passes its busy indicators (working, retry,
  * compaction, branch summary) to the editor, which shows them in the status line.
  * `readRightPadding` is called on every render and adds columns to the right margin.
+ * Pi's editor `paddingX` setting adds columns to both margins of the box and moves the autocomplete list
+ * with it; the text padding inside the box stays the same.
  * Pi's scroll indicators (`N ↑`, `N ↓`) go right-aligned into the padding rows
  * around the text, in the theme `borderColor` (Pi's `borderMuted`).
  */
@@ -85,6 +99,8 @@ export class PromptBoxEditor extends CustomEditor {
 	private readonly editorTheme: EditorTheme;
 	private readonly readRightPadding: ReadRightPadding;
 	private statusIndicator: StatusIndicator | undefined;
+	// Pi's editor paddingX setting; the base editor keeps 0, so its text indent inside the box stays the same
+	private boxPaddingX = 0;
 	// Text lines hidden above and below the visible ones, set by the base render through the border methods
 	private hiddenAbove = 0;
 	private hiddenBelow = 0;
@@ -110,6 +126,20 @@ export class PromptBoxEditor extends CustomEditor {
 		this.statusIndicator = indicator;
 	}
 
+	// Pi copies its editor paddingX setting here; it widens the box margins instead of the base text indent
+	override getPaddingX(): number {
+		return this.boxPaddingX;
+	}
+
+	override setPaddingX(padding: number): void {
+		const boxPaddingX = Number.isFinite(padding) ? Math.max(0, Math.floor(padding)) : 0;
+		if (this.boxPaddingX === boxPaddingX)
+			return;
+
+		this.boxPaddingX = boxPaddingX;
+		this.tui.requestRender();
+	}
+
 	// The base top border is dropped; only its hidden line count is kept
 	protected override renderTopBorder(_width: number, hiddenLineCount: number): string {
 		this.hiddenAbove = hiddenLineCount;
@@ -122,8 +152,11 @@ export class PromptBoxEditor extends CustomEditor {
 	}
 
 	override render(width: number): string[] {
-		const rightMargin = RIGHT_MARGIN + this.readRightPadding();
-		const textWidth = width - LEFT_MARGIN - rightMargin - BAR_WIDTH - 2 * INNER_PADDING;
+		const margins = {
+			left: LEFT_MARGIN + this.boxPaddingX,
+			right: RIGHT_MARGIN + this.boxPaddingX + this.readRightPadding(),
+		};
+		const textWidth = width - margins.left - margins.right - BAR_WIDTH - 2 * INNER_PADDING;
 		if (textWidth < 1) {
 			this.boxLayout = undefined;
 			return super.render(width);
@@ -134,22 +167,24 @@ export class PromptBoxEditor extends CustomEditor {
 		const bottomBorderIndex = baseLines.indexOf(BOTTOM_BORDER_MARKER);
 		const textLines = baseLines.slice(1, bottomBorderIndex);
 		const autocompleteLines = baseLines.slice(bottomBorderIndex + 1);
-		this.boxLayout = { textWidth, textLineCount: textLines.length };
+		this.boxLayout = { leftMargin: margins.left, textWidth, textLineCount: textLines.length };
 
-		const boxWidth = width - LEFT_MARGIN - rightMargin - BAR_WIDTH;
+		const boxWidth = width - margins.left - margins.right - BAR_WIDTH;
 		const barColor = this.borderColor;
 		const status = this.renderStatusLine(textWidth, barColor);
 
 		const scrollUp = this.renderScrollIndicator(SCROLL_UP, this.hiddenAbove, textWidth);
 		const scrollDown = this.renderScrollIndicator(SCROLL_DOWN, this.hiddenBelow, textWidth);
 
+		const autocompleteIndent = " ".repeat(margins.left + TEXT_OFFSET - SELECT_PREFIX_WIDTH);
+
 		return [
-			renderBoxRow(scrollUp, textWidth, rightMargin, barColor),
-			...textLines.map((line) => renderBoxRow(line, textWidth, rightMargin, barColor)),
-			renderBoxRow(scrollDown, textWidth, rightMargin, barColor),
-			renderBoxRow(status, textWidth, rightMargin, barColor),
-			renderHalfRow("╹", "▀", boxWidth, rightMargin, barColor),
-			...autocompleteLines.map((line) => " ".repeat(AUTOCOMPLETE_INDENT) + line),
+			renderBoxRow(scrollUp, textWidth, margins, barColor),
+			...textLines.map((line) => renderBoxRow(line, textWidth, margins, barColor)),
+			renderBoxRow(scrollDown, textWidth, margins, barColor),
+			renderBoxRow(status, textWidth, margins, barColor),
+			renderHalfRow("╹", "▀", boxWidth, margins, barColor),
+			...autocompleteLines.map((line) => autocompleteIndent + line),
 		];
 	}
 
@@ -166,12 +201,15 @@ export class PromptBoxEditor extends CustomEditor {
 		const autocompleteRow = 1 + layout.textLineCount + ROWS_AFTER_TEXT;
 		const rowShift = ROWS_AFTER_TEXT - BASE_ROWS_AFTER_TEXT;
 		const baseEvent = { ...event, width: layout.textWidth, height: event.height - rowShift };
-		if (event.y >= autocompleteRow)
-			return super.handleMouse({ ...baseEvent, x: event.x - AUTOCOMPLETE_INDENT, y: event.y - rowShift });
+		const textIndent = layout.leftMargin + TEXT_OFFSET;
+		if (event.y >= autocompleteRow) {
+			const x = event.x - textIndent + SELECT_PREFIX_WIDTH;
+			return super.handleMouse({ ...baseEvent, x, y: event.y - rowShift });
+		}
 
 		const y = event.y <= layout.textLineCount ? event.y : BASE_BORDER_ROW;
 
-		return super.handleMouse({ ...baseEvent, x: event.x - TEXT_INDENT, y });
+		return super.handleMouse({ ...baseEvent, x: event.x - textIndent, y });
 	}
 
 	/**
@@ -254,11 +292,11 @@ function renderHalfRow(
 	barChar: string,
 	fillChar: string,
 	boxWidth: number,
-	rightMarginWidth: number,
+	margins: BoxMargins,
 	barColor: (text: string) => string,
 ): string {
-	const leftMargin = " ".repeat(LEFT_MARGIN);
-	const rightMargin = " ".repeat(rightMarginWidth);
+	const leftMargin = " ".repeat(margins.left);
+	const rightMargin = " ".repeat(margins.right);
 
 	return `${leftMargin}${barColor(barChar)}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${rightMargin}`;
 }
@@ -270,11 +308,11 @@ function renderHalfRow(
 function renderBoxRow(
 	content: string,
 	textWidth: number,
-	rightMarginWidth: number,
+	margins: BoxMargins,
 	barColor: (text: string) => string,
 ): string {
-	const leftMargin = " ".repeat(LEFT_MARGIN);
-	const rightMargin = " ".repeat(rightMarginWidth);
+	const leftMargin = " ".repeat(margins.left);
+	const rightMargin = " ".repeat(margins.right);
 	const padding = " ".repeat(INNER_PADDING);
 	const fill = " ".repeat(Math.max(0, textWidth + INNER_PADDING - visibleWidth(content)));
 	// Styled content may reset all attributes, which would also drop the box background

@@ -100,9 +100,15 @@ autocomplete lines go below the box, moved left by Pi's 2-column item prefix so
 the item text aligns with the input text. Styled content may reset all attributes, so every reset
 inside a box row is followed by the box background again.
 
+Pi copies its editor `paddingX` setting to the editor with `setPaddingX()`,
+also when it changes. The editor keeps the value in its own field, returns it
+from `getPaddingX()`, and adds it to both box margins on each render. The base
+editor keeps padding 0, so its text indent inside the box stays the same. The
+chat, footer, and dialogs use the base margins and do not follow the setting.
+
 Pi's editor maps mouse events with its own layout, so `handleMouse()` maps
-them back with the box geometry of the last render: text rows are moved left
-by the text indent, autocomplete rows also up by the two extra box rows, and
+them back with the box geometry of the last render, including the margins:
+text rows are moved left by the text indent, autocomplete rows also up by the two extra box rows, and
 the width is the inner text width. Box rows without text (top padding, blank,
 status, half row) are passed on the base top border row, where Pi only takes
 focus. When the last render fell back to the base editor, events pass unchanged.

@@ -47,6 +47,11 @@ Legend:
   - `!!` input (output kept out of the model context) shows `Bash (no context)`;
     `(no context)` is theme `dim`.
 
+Pi's editor `paddingX` setting (`/settings`): adds that many columns to both
+margins of the box, so the box gets narrower. The padding inside the box stays
+the same, and the autocomplete list moves with the box. The chat, footer, and
+dialogs keep their margins, so they align with the box only when the setting is 0.
+
 Autocomplete list (slash commands, file paths): below the box, outside its
 background. It is moved left by the width of Pi's item prefix (`→ ` or two
 spaces), so the item text starts in the same column as the input text, and the

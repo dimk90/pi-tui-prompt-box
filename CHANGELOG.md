@@ -16,6 +16,7 @@
 * `[ui]` Map mouse clicks on the box to the input text and the autocomplete list
 * `[ui]` Indent selectors and extension dialogs shown in place of the box like the chat
 * `[ui]` Show Pi's scroll indicators as `N ↑` / `N ↓` in the box padding rows
+* `[ui]` Apply Pi's editor `paddingX` setting to the box margins, not the text padding
 
 
 ## [0.0.1] - 01.11.2026

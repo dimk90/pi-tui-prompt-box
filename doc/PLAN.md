@@ -1,11 +1,8 @@
 # TODO
 
-- [x] Restore the editor scroll indicators (`↑ N more` / `↓ N more`).
-  - Pi draws them in the top and bottom borders, which the box drops.
-  - Shown as `N ↑` / `N ↓`, right-aligned in the padding rows, in theme `borderMuted`.
-- [ ] Handle Pi's editor `paddingX` setting.
-  - `setEditorComponent` copies it over our `paddingX: 0`, so text gets extra indent inside the box.
-  - Ignore it or include it in the width math.
+- [x] Handle Pi's editor `paddingX` setting.
+  - Adds to both box margins and moves the autocomplete list; the text padding stays the same.
+  - The chat, footer, and dialogs keep their margins.
 - [ ] Decide what the status line shows when thinking is off (now `· Off`).
 - [x] Add 1 column right padding for the chat in fullscreen mode to fit scrollbar without overlapping with chat.
   - Only with the `auto` scrollbar; also pads queued messages, widgets, prompt box, and footer.
@@ -19,6 +16,11 @@
   - Autocomplete lines placed below the box.
 - [ ] Fix `doc/ui.md`.
   - Terminal background is the user's, not always black.
+- [ ] Add mock provider:
+  - Response with fake text & thinking to demonstrate on a fake session.
+  - No real model calls, model response are fake.
+  - Funny provider & model name.
+  - No thinking mode.
 - [ ] Add a demo GIF (S-VHS) and logo to the README:
   - demo: switch thinking effort;
   - demo: bash mode;

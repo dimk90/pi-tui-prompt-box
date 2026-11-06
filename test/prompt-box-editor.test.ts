@@ -65,6 +65,45 @@ test("PromptBoxEditor leaves the right padding after the box", () => {
 	assert.ok(halfRow.endsWith("▀ "), "one empty column after the box");
 });
 
+test("PromptBoxEditor adds Pi's editor paddingX to the box margins, not to the text padding", () => {
+	const editor = createEditor();
+	editor.setPaddingX(2);
+	editor.setText("/mo");
+	openAutocomplete(editor, [{ value: "model", label: "model" }]);
+
+	const lines = editor.render(40).map((line) => stripTerminalSequences(line));
+	// The last line is the autocomplete item, outside the box
+	for (const line of lines.slice(0, -1))
+		assert.equal(visibleWidth(line), 40);
+	assert.equal(editor.getPaddingX(), 2);
+	assert.ok(lines[0]?.startsWith("   ┃"), "bar after the left margin and paddingX");
+	assert.ok(lines.at(-2)?.endsWith("▀  "), "paddingX after the box");
+
+	const inputColumn = (lines[1] ?? "").indexOf("/mo");
+	assert.equal(inputColumn, 6);
+	assert.equal((lines.at(-3) ?? "").indexOf("model"), inputColumn, "status line text");
+	assert.equal((lines.at(-1) ?? "").indexOf("→ model") + 2, inputColumn, "autocomplete item text");
+});
+
+test("PromptBoxEditor maps clicks with Pi's editor paddingX", () => {
+	const editor = createEditor();
+	editor.setPaddingX(3);
+	editor.setText("hello");
+	const lines = editor.render(40).map((line) => stripTerminalSequences(line));
+
+	const column = (lines[1] ?? "").indexOf("hello") + 2;
+	editor.handleMouse(createClick(column, 1, lines.length));
+	assert.deepEqual(editor.getCursor(), { line: 0, col: 2 });
+});
+
+test("PromptBoxEditor falls back to the base editor when Pi's editor paddingX leaves no text width", () => {
+	const editor = createEditor();
+	editor.setPaddingX(2);
+
+	const lines = editor.render(BOX_COLUMNS + 4).map((line) => stripTerminalSequences(line));
+	assert.ok(lines.every((line) => !line.includes("┃")), "no box");
+});
+
 test("PromptBoxEditor shows Pi's scroll indicators right-aligned in the padding rows", () => {
 	const editor = createEditor();
 	const lines = Array.from({ length: 30 }, (_, index) => `line ${index}`);
