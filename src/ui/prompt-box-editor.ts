@@ -184,7 +184,7 @@ export class PromptBoxEditor extends CustomEditor {
 			renderBoxRow(scrollDown, textWidth, margins, barColor),
 			renderBoxRow(status, textWidth, margins, barColor),
 			renderHalfRow("╹", "▀", boxWidth, margins, barColor),
-			...autocompleteLines.map((line) => autocompleteIndent + line),
+			...autocompleteLines.map((line) => padToWidth(autocompleteIndent + line, width)),
 		];
 	}
 
@@ -283,6 +283,13 @@ function detectBashMode(text: string): BashMode {
 		return "context";
 
 	return "off";
+}
+
+/**
+ * Pads `line` with trailing spaces to `width` columns, so rows outside the box have the full width too.
+ */
+function padToWidth(line: string, width: number): string {
+	return line + " ".repeat(Math.max(0, width - visibleWidth(line)));
 }
 
 /**

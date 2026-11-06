@@ -97,7 +97,7 @@ in the top padding row and the blank row. They use the `borderColor` of the
 editor theme, which is Pi's `borderMuted`; Pi changes only the editor's own
 `borderColor` for the thinking level and bash mode. The
 autocomplete lines go below the box, moved left by Pi's 2-column item prefix so
-the item text aligns with the input text. Styled content may reset all attributes, so every reset
+the item text aligns with the input text, and padded to the full width. Styled content may reset all attributes, so every reset
 inside a box row is followed by the box background again.
 
 Pi copies its editor `paddingX` setting to the editor with `setPaddingX()`,

@@ -72,8 +72,7 @@ test("PromptBoxEditor adds Pi's editor paddingX to the box margins, not to the t
 	openAutocomplete(editor, [{ value: "model", label: "model" }]);
 
 	const lines = editor.render(40).map((line) => stripTerminalSequences(line));
-	// The last line is the autocomplete item, outside the box
-	for (const line of lines.slice(0, -1))
+	for (const line of lines)
 		assert.equal(visibleWidth(line), 40);
 	assert.equal(editor.getPaddingX(), 2);
 	assert.ok(lines[0]?.startsWith("   ┃"), "bar after the left margin and paddingX");
@@ -133,6 +132,7 @@ test("PromptBoxEditor aligns the autocomplete item text with the input text", ()
 	const inputColumn = (lines[1] ?? "").indexOf("/mo");
 	const autocompleteRow = lines.at(-1) ?? "";
 	assert.equal(autocompleteRow.indexOf("→ model") + 2, inputColumn);
+	assert.equal(visibleWidth(autocompleteRow), 40, "full width");
 });
 
 test("PromptBoxEditor places the cursor where the input text is clicked", () => {

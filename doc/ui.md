@@ -55,7 +55,8 @@ dialogs keep their margins, so they align with the box only when the setting is 
 Autocomplete list (slash commands, file paths): below the box, outside its
 background. It is moved left by the width of Pi's item prefix (`→ ` or two
 spaces), so the item text starts in the same column as the input text, and the
-`→` of the selected item sits in the inner padding.
+`→` of the selected item sits in the inner padding. Its rows are padded with
+spaces to the full width, like the box rows.
 
 Footer: Pi's built-in footer, below the box, keeps its content but is moved
 right by the box margins, so it starts in the same column as the accent bar.
