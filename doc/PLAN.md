@@ -1,9 +1,5 @@
 # TODO
 
-- [ ] Dynamic background brightening function for prompt box:
-  - background[prompt-box] = brighten(theme.background)
-- [ ] Fix `doc/ui.md`.
-  - Terminal background is the user's, not always black.
 - [ ] Add render tests for the editor.
   - Box background restored after every reset.
   - Every row has the full width.

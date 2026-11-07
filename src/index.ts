@@ -5,8 +5,10 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { TUI } from "@earendil-works/pi-tui";
+import type { RgbColor, TUI } from "@earendil-works/pi-tui";
 
+import { watchTerminalBackground } from "./terminal-background.ts";
+import { computeBoxColors, type ReadBoxColors } from "./ui/colors.ts";
 import { padPiContainers } from "./ui/padded-containers.ts";
 import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
@@ -18,6 +20,7 @@ import { formatStatus } from "./ui/status-line.ts";
  */
 export default function promptBox(pi: ExtensionAPI): void {
 	let restoreContainers: (() => void) | undefined;
+	let stopWatchingBackground: (() => void) | undefined;
 
 	pi.on("session_start", (_event, ctx) => {
 		const renderStatus: RenderStatus = (barColor, bashMode) =>
@@ -30,17 +33,27 @@ export default function promptBox(pi: ExtensionAPI): void {
 				thinkingLevel: pi.getThinkingLevel(),
 			});
 
+		let terminalBackground: RgbColor | undefined;
+		const readBoxColors: ReadBoxColors = () =>
+			computeBoxColors(terminalBackground, ctx.ui.theme.appearance, ctx.ui.theme.getColorMode());
+
 		let editorTui: TUI | undefined;
 		let editor: PromptBoxEditor | undefined;
 		ctx.ui.setEditorComponent((tui, theme, keybindings) => {
 			editorTui = tui;
-			editor = new PromptBoxEditor(tui, theme, keybindings, renderStatus, () => readScrollbarPadding(tui));
+			const readRightPadding = () => readScrollbarPadding(tui);
+			editor = new PromptBoxEditor(tui, theme, keybindings, renderStatus, readBoxColors, readRightPadding);
 			return editor;
 		});
 
 		// Pi calls the editor factory synchronously, so both are set here in TUI mode only
 		if (!editorTui || !editor)
 			return;
+
+		stopWatchingBackground = watchTerminalBackground(editorTui, (background) => {
+			terminalBackground = background;
+			editorTui?.requestRender();
+		});
 
 		restoreContainers = padPiContainers(editorTui, editor);
 
@@ -53,9 +66,12 @@ export default function promptBox(pi: ExtensionAPI): void {
 		ctx.ui.setFooter((tui) => new PaddedFooter(builtInFooter, readModelState, () => readScrollbarPadding(tui)));
 	});
 
-	// Pi keeps its containers across extension reloads and session changes, so remove the padding for the next
-	// extension instance; on quit it stays, as Pi may still print the transcript
 	pi.on("session_shutdown", (event) => {
+		stopWatchingBackground?.();
+		stopWatchingBackground = undefined;
+
+		// Pi keeps its containers across extension reloads and session changes, so remove the padding for the
+		// next extension instance; on quit it stays, as Pi may still print the transcript
 		if (event.reason !== "quit")
 			restoreContainers?.();
 

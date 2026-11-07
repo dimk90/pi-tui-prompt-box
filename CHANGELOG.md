@@ -18,6 +18,7 @@
 * `[ui]` Show Pi's scroll indicators as `N ↑` / `N ↓` in the box padding rows.
 * `[ui]` Apply Pi's editor `paddingX` setting to the box margins, not the text padding.
 * `[ui]` Show `thinking off` in the status line; hide the level for non-reasoning models.
+* `[ui]` Derive the box background from the terminal background instead of a fixed gray.
 
 
 ## [0.0.1] - 01.11.2026

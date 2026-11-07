@@ -9,9 +9,11 @@ state, and the required invariants. The look of the box is specified in
 
 ```text
 session_start    → install PromptBoxEditor via setEditorComponent,
+                   watch the terminal background,
                    pad Pi's chat, queued messages, widgets, and dialogs,
                    wrap Pi's built-in footer in PaddedFooter via setFooter
-session_shutdown → remove the container padding, except on quit
+session_shutdown → stop watching the terminal background,
+                   remove the container padding, except on quit
 ```
 
 The editor factory passed to `setEditorComponent` runs when Pi builds the
@@ -83,6 +85,7 @@ footers from other extensions are never wrapped; hiding their parts is their job
 | `src/ui/scrollbar-padding.ts` | Right padding for Pi's fullscreen `auto` scrollbar.             |
 | `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed. |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.   |
+| `src/terminal-background.ts`  | Terminal background, read from the terminal for the box.        |
 
 ## Editor Rendering
 
@@ -120,6 +123,23 @@ checked with Pi's rules: the input, without leading whitespace, starts with
 `!`, or with `!!` when the output stays out of the context. The status line reads the other colors
 from `ctx.ui.theme` at render time, so theme changes apply on the next render.
 
+## Box Background
+
+Pi themes have no background color, and Pi keeps the terminal colors it read
+private. So `session_start` asks the terminal itself with
+`tui.queryTerminalColors()`, the same query Pi sends, with Pi's 100 ms timeout,
+and again on every light/dark change the terminal reports through
+`tui.onTerminalColorSchemeChange()`. Pi's TUI matches the replies to the
+queries, so they do not reach the editor input. Each reported background,
+including late replies, is kept and triggers a render; a reply without one
+keeps the last. `session_shutdown` stops watching, and replies after it are
+ignored.
+
+`computeBoxColors()` runs on every render, so it follows the background, the
+theme appearance, and the theme color mode (truecolor or 256 colors). Without a
+reported background it uses Pi's guess for the theme appearance: black for
+dark, white for light.
+
 ## Busy Indicator
 
 The editor sets `embedWorkingStatus`, so Pi passes its status indicator
@@ -139,14 +159,16 @@ full, as is an indicator without a spinner frame.
 
 ## State
 
-No extension state; nothing is persisted. The editor keeps Pi's current status
-indicator. The extension keeps the function that removes the container padding.
+Nothing is persisted. The editor keeps Pi's current status indicator. The
+extension keeps the function that removes the container padding, the function
+that stops watching the terminal background, and the last reported background.
 Model and thinking level are read from the context at render time.
 
 ## Required Invariants
 
 - Normal turns are unchanged: the extension adds nothing to provider requests.
-- The extension starts no timers; busy indicator animation is Pi's.
+- The extension starts no timers; busy indicator animation is Pi's. The only
+  timer it causes is the timeout of Pi's terminal color query.
 - Widths below the box minimum fall back to the base editor rendering, with
   Pi's borders.
 - The footer content stays Pi's: `PaddedFooter` only narrows and indents it

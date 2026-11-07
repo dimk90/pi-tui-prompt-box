@@ -13,7 +13,7 @@ import {
 	visibleWidth,
 } from "@earendil-works/pi-tui";
 
-import { BOX_BG, BOX_FG, RESET } from "./colors.ts";
+import { type BoxColors, type ReadBoxColors, RESET } from "./colors.ts";
 import type { ReadRightPadding } from "./scrollbar-padding.ts";
 import type { BashMode } from "./status-line.ts";
 
@@ -78,6 +78,15 @@ interface BoxMargins {
 }
 
 /**
+ * Shared look of the box rows of one render.
+ */
+interface BoxStyle {
+	margins: BoxMargins;
+	barColor: (text: string) => string;
+	colors: BoxColors;
+}
+
+/**
  * Main editor drawn as a filled box with a left accent bar and a status line inside.
  *
  * The base editor renders the text lines; this class replaces its borders and
@@ -86,6 +95,7 @@ interface BoxMargins {
  * uses `borderColor`, which Pi sets from the thinking level and bash mode.
  * With `embedWorkingStatus`, Pi passes its busy indicators (working, retry,
  * compaction, branch summary) to the editor, which shows them in the status line.
+ * `readBoxColors` is called on every render, so the box follows the terminal background.
  * `readRightPadding` is called on every render and adds columns to the right margin.
  * Pi's editor `paddingX` setting adds columns to both margins of the box and moves the autocomplete list
  * with it; the text padding inside the box stays the same.
@@ -97,6 +107,7 @@ export class PromptBoxEditor extends CustomEditor {
 	// The base class keeps the theme private; its borderColor stays Pi's `borderMuted` while Pi changes the
 	// editor borderColor for the thinking level and bash mode
 	private readonly editorTheme: EditorTheme;
+	private readonly readBoxColors: ReadBoxColors;
 	private readonly readRightPadding: ReadRightPadding;
 	private statusIndicator: StatusIndicator | undefined;
 	// Pi's editor paddingX setting; the base editor keeps 0, so its text indent inside the box stays the same
@@ -114,11 +125,13 @@ export class PromptBoxEditor extends CustomEditor {
 		theme: EditorTheme,
 		keybindings: KeybindingsManager,
 		renderStatus: RenderStatus,
+		readBoxColors: ReadBoxColors,
 		readRightPadding: ReadRightPadding = () => 0,
 	) {
 		super(tui, theme, keybindings, { paddingX: 0, embedWorkingStatus: true });
 		this.renderStatus = renderStatus;
 		this.editorTheme = theme;
+		this.readBoxColors = readBoxColors;
 		this.readRightPadding = readRightPadding;
 	}
 
@@ -179,6 +192,7 @@ export class PromptBoxEditor extends CustomEditor {
 
 		const boxWidth = width - margins.left - margins.right - BAR_WIDTH;
 		const barColor = this.borderColor;
+		const colors = this.readBoxColors();
 		const status = this.renderStatusLine(textWidth, barColor);
 
 		const scrollUp = this.renderScrollIndicator(SCROLL_UP, this.hiddenAbove, textWidth);
@@ -186,12 +200,14 @@ export class PromptBoxEditor extends CustomEditor {
 
 		const autocompleteIndent = " ".repeat(margins.left + TEXT_OFFSET - SELECT_PREFIX_WIDTH);
 
+		const style = { margins, barColor, colors };
+
 		return [
-			renderBoxRow(scrollUp, textWidth, margins, barColor),
-			...textLines.map((line) => renderBoxRow(line, textWidth, margins, barColor)),
-			renderBoxRow(scrollDown, textWidth, margins, barColor),
-			renderBoxRow(status, textWidth, margins, barColor),
-			renderHalfRow("╹", "▀", boxWidth, margins, barColor),
+			renderBoxRow(scrollUp, textWidth, style),
+			...textLines.map((line) => renderBoxRow(line, textWidth, style)),
+			renderBoxRow(scrollDown, textWidth, style),
+			renderBoxRow(status, textWidth, style),
+			renderHalfRow("╹", "▀", boxWidth, style),
 			...autocompleteLines.map((line) => padToWidth(autocompleteIndent + line, width)),
 		];
 	}
@@ -315,35 +331,27 @@ function padToWidth(line: string, width: number): string {
 /**
  * Renders the thin bottom edge of the box with half blocks.
  */
-function renderHalfRow(
-	barChar: string,
-	fillChar: string,
-	boxWidth: number,
-	margins: BoxMargins,
-	barColor: (text: string) => string,
-): string {
+function renderHalfRow(barChar: string, fillChar: string, boxWidth: number, style: BoxStyle): string {
+	const { margins, barColor, colors } = style;
 	const leftMargin = " ".repeat(margins.left);
 	const rightMargin = " ".repeat(margins.right);
 
-	return `${leftMargin}${barColor(barChar)}${BOX_FG}${fillChar.repeat(boxWidth)}${RESET}${rightMargin}`;
+	return `${leftMargin}${barColor(barChar)}${colors.halfBlock}${fillChar.repeat(boxWidth)}${RESET}${rightMargin}`;
 }
 
 /**
  * Renders one full-height box row: accent bar, padding and content on the box background.
  * Content wider than `textWidth` extends into the right inner padding; only scroll indicators do that.
  */
-function renderBoxRow(
-	content: string,
-	textWidth: number,
-	margins: BoxMargins,
-	barColor: (text: string) => string,
-): string {
+function renderBoxRow(content: string, textWidth: number, style: BoxStyle): string {
+	const { margins, barColor, colors } = style;
 	const leftMargin = " ".repeat(margins.left);
 	const rightMargin = " ".repeat(margins.right);
 	const padding = " ".repeat(INNER_PADDING);
 	const fill = " ".repeat(Math.max(0, textWidth + INNER_PADDING - visibleWidth(content)));
 	// Styled content may reset all attributes, which would also drop the box background
-	const boxedContent = content.replaceAll(RESET, RESET + BOX_BG);
+	const boxedContent = content.replaceAll(RESET, RESET + colors.background);
+	const box = `${colors.background}${padding}${boxedContent}${fill}${RESET}`;
 
-	return `${leftMargin}${barColor("┃")}${RESET}${BOX_BG}${padding}${boxedContent}${fill}${RESET}${rightMargin}`;
+	return `${leftMargin}${barColor("┃")}${RESET}${box}${rightMargin}`;
 }

@@ -193,7 +193,9 @@ function createEditor(readRightPadding?: () => number): PromptBoxEditor {
 	const tui = { requestRender() {}, terminal: { rows: 40 } } as unknown as TUI;
 	const theme = { borderColor: (text: string) => text, selectList: {} } as unknown as EditorTheme;
 
-	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => "model", readRightPadding);
+	const readBoxColors = () => ({ background: "\x1b[48;2;31;31;31m", halfBlock: "\x1b[38;2;31;31;31m" });
+
+	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => "model", readBoxColors, readRightPadding);
 }
 
 /**
