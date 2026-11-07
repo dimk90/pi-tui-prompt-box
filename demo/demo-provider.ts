@@ -2,6 +2,8 @@
  * Demo provider extension: a fake `rubber-duck` provider with one reasoning
  * model, `quack-mini`, for demo recordings and manual testing. It never calls
  * a real model; replies come from `replies.ts` and stream like real ones.
+ * The virtual model `rubber-duck/auto` routes every request to `quack-mini`,
+ * to check how a routed model is shown.
  *
  * Usage: pi -e . -e ./demo/demo-provider.ts --model rubber-duck/quack-mini
  */
@@ -14,6 +16,7 @@ import {
 	type FauxContentBlock,
 	fauxText,
 	fauxThinking,
+	type ModelThinkingLevel,
 	type SimpleStreamOptions,
 	type TranscriptContext,
 } from "@earendil-works/pi-ai";
@@ -30,12 +33,18 @@ const DEMO_PROVIDER_NAME = "Rubber Duck";
 /** Model id, used in `--model rubber-duck/quack-mini`. */
 const DEMO_MODEL = "quack-mini";
 
+/** Virtual model id, used in `--model rubber-duck/auto`. */
+const ROUTER_MODEL = "auto";
+
+/** Thinking levels offered by the virtual model: all of them, like `quack-mini`. */
+const ROUTER_THINKING_LEVELS: readonly ModelThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
+
 const DEMO_API = "rubber-duck-demo";
 
 /** Streaming speed: a default reply takes about 1–2 seconds. */
 const TOKENS_PER_SECOND = 80;
 
-const MODEL: ProviderModelConfig = {
+const MODEL = {
 	id: DEMO_MODEL,
 	name: "Quack Mini",
 	reasoning: true,
@@ -45,7 +54,7 @@ const MODEL: ProviderModelConfig = {
 	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 	contextWindow: 128_000,
 	maxTokens: 16_384,
-};
+} satisfies ProviderModelConfig;
 
 /**
  * Registers the demo provider. Pi's faux provider core streams the replies in
@@ -63,6 +72,23 @@ export default function demoProvider(pi: ExtensionAPI): void {
 		streamSimple: (model, context, options) => {
 			core.appendResponses([respond]);
 			return core.streamSimple(model, context, options);
+		},
+	});
+
+	pi.registerVirtualModel({
+		provider: DEMO_PROVIDER,
+		id: ROUTER_MODEL,
+		name: "Auto",
+		thinkingLevels: ROUTER_THINKING_LEVELS,
+		input: MODEL.input,
+		contextWindow: MODEL.contextWindow,
+		maxTokens: MODEL.maxTokens,
+		route: (request, ctx) => {
+			const model = ctx.modelRegistry.find(DEMO_PROVIDER, DEMO_MODEL);
+			if (model === undefined)
+				throw new Error(`Demo model ${DEMO_PROVIDER}/${DEMO_MODEL} is not registered`);
+
+			return { model, thinkingLevel: request.thinkingLevel };
 		},
 	});
 }

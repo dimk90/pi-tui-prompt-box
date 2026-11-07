@@ -16,6 +16,11 @@ From the repository root:
 pi -e . -e ./demo/demo-provider.ts --model rubber-duck/quack-mini
 ```
 
+To check a routed model, select `rubber-duck/auto` instead (`--model` or
+`/model`). It is a virtual model, `Auto`, that sends every request to
+`quack-mini` with the same thinking level. After the first reply, Pi's footer
+shows the route, for example `auto • high → quack-mini • high`.
+
 ## Replies
 
 Each reply quotes your prompt and adds a short markdown answer: a list and a
