@@ -28,6 +28,7 @@ export interface StatusLineOptions {
 
 /**
  * Builds the status line text: model, provider and thinking level.
+ * Like Pi's footer, the level shows only for models with reasoning support, and level `off` shows as `thinking off`.
  * In bash mode, `Bash` replaces them. Pi's busy indicator is added by the editor.
  */
 export function formatStatus(options: StatusLineOptions): string {
@@ -41,8 +42,11 @@ export function formatStatus(options: StatusLineOptions): string {
 	const modelText = model
 		? `${theme.fg("text", model.name)} ${theme.fg("dim", getProviderName(model.provider))}`
 		: theme.fg("dim", "no model");
+	if (!model?.reasoning)
+		return modelText;
+
 	const separator = theme.fg("dim", " · ");
-	const level = levelColor(thinkingLevel);
+	const level = levelColor(thinkingLevel === "off" ? "thinking off" : thinkingLevel);
 
 	return `${modelText}${separator}${level}`;
 }

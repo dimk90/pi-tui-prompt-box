@@ -31,6 +31,8 @@ Legend:
   padding, in theme `borderMuted`. Pi's word `more` is dropped.
 - Status line:
   - `medium` — thinking level as Pi names it (lower case), same color as the accent bar.
+    Level `off` shows as `thinking off`. Like Pi's footer, models without
+    reasoning support show no level and no separator.
   - `·` — separator, theme `dim`.
   - `Big Pickle` — model name, theme `text`.
   - `OpenCode Zen` — provider display name as Pi's model registry names it

@@ -17,6 +17,7 @@
 * `[ui]` Indent selectors and extension dialogs shown in place of the box like the chat.
 * `[ui]` Show Pi's scroll indicators as `N ↑` / `N ↓` in the box padding rows.
 * `[ui]` Apply Pi's editor `paddingX` setting to the box margins, not the text padding.
+* `[ui]` Show `thinking off` in the status line; hide the level for non-reasoning models.
 
 
 ## [0.0.1] - 01.11.2026
