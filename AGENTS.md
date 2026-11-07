@@ -8,7 +8,7 @@ The box is drawn only in TUI mode; other modes have no editor and are unaffected
 
 | Path                  | Read before                                                                                        |
 | --------------------- | -------------------------------------------------------------------------------------------------- |
-| `doc/ui.md`           | Changing how the box looks: layout, characters, and colors.                                        |
+| `doc/ui.md`           | Changing what the user sees: box layout, characters, colors, and how other Pi parts are moved.     |
 | `doc/PLAN.md`         | Picking up new work; it holds the TODO list and backlog.                                           |
 | `doc/ARCHITECTURE.md` | Changing lifecycle handlers, state, or the editor component.                                       |
 | `doc/RELEASE.md`      | Changing versions, tagging, publishing, or preparing a release; `scripts/release.sh` automates it. |
@@ -16,7 +16,7 @@ The box is drawn only in TUI mode; other modes have no editor and are unaffected
 ## Repository rules
 
 - **Architecture contract.** Preserve the invariants in `doc/ARCHITECTURE.md`; update it with any lifecycle or state change.
-- **UI contract.** Keep `doc/ui.md` in sync with the rendered box.
+- **UI contract.** Keep `doc/ui.md` in sync with the rendered UI; describe each visible behavior there, not in `doc/ARCHITECTURE.md`.
 - **Module boundaries.** Keep `src/index.ts` to wiring: register handlers and hold closure state. Put independently testable logic in focused modules under `src/`, and TUI components in `src/ui/`.
 - **Changelog headings.** Write version headings as `## [X.Y.Z] - DD.MM.YYYY`, without a `v` prefix, so Pi can parse them.
 - **Changelog entries.** Keep the text of each `CHANGELOG.md` bullet, after its `[scope]` tag, to about 80 characters.

@@ -2,8 +2,9 @@
 
 How `pi-tui-prompt-box` hooks into Pi, and the rules that changes must
 preserve. This file holds the overview, the lifecycle, the module boundaries,
-state, and the required invariants. The look of the box is specified in
-[ui.md](ui.md).
+state, and the required invariants: how and why the code works. What the user
+sees is specified only in [ui.md](ui.md); this file links to it instead of
+repeating it.
 
 ## Lifecycle
 
@@ -56,9 +57,9 @@ instance. On quit the padding stays, as Pi may still print the transcript.
 
 In fullscreen mode with the `auto` scrollbar, Pi draws the scrollbar over the
 last column of the chat, so the padded containers, the prompt box, and the
-footer are also narrowed by one column on the right, and keep their right
-edges aligned. In `always` mode Pi already narrows the chat itself; `hidden`
-mode and regular mode have no scrollbar. Pi gives extensions no reference to
+footer leave that column empty ([ui.md](ui.md#other-parts-of-pi)). In
+`always` mode Pi already narrows the chat itself; `hidden` mode and regular
+mode have no scrollbar. Pi gives extensions no reference to
 its scroll view, so `readScrollbarPadding()` reads the TUI's fullscreen layout
 root (a field Pi's types mark private) and looks among its children for the
 one that holds the document (the first TUI child) and has a `scrollbar` mode.
@@ -66,11 +67,10 @@ If it is not found, no column is added. It is called on every render and mouse
 event, so the padding follows mode switches and changes of the scrollbar
 setting.
 
-The box status line already shows the model, so `PaddedFooter` removes the
-model part that Pi right-aligns on the footer stats line (second line):
-`(provider) model-id • level`. It builds that text from `ctx.model` and the
-thinking level, as Pi does, and cuts it only when the stats line ends with it
-after at least two spaces. Otherwise the line stays unchanged, for example
+`PaddedFooter` removes the model part of the footer stats line (second line)
+([ui.md](ui.md#other-parts-of-pi)). It builds that text from `ctx.model` and
+the thinking level, as Pi does, and cuts it only when the stats line ends with
+it after at least two spaces. Otherwise the line stays unchanged, for example
 when Pi truncated it, shows a routed model, or changed its format. Custom
 footers from other extensions are never wrapped; hiding their parts is their job.
 
@@ -95,26 +95,26 @@ and autocomplete lines. `renderBottomBorder()` returns a marker so `render()`
 can find where the text lines end; both base borders are dropped. The top one
 is replaced by an empty box row, the bottom one by a half-block row.
 Pi passes the counts of hidden text lines to `renderTopBorder()` and
-`renderBottomBorder()`; the editor keeps them and shows the scroll indicators
-in the top padding row and the blank row. They use the `borderColor` of the
-editor theme, which is Pi's `borderMuted`; Pi changes only the editor's own
-`borderColor` for the thinking level and bash mode. The
-autocomplete lines go below the box, moved left by Pi's 2-column item prefix so
-the item text aligns with the input text, and padded to the full width. Styled content may reset all attributes, so every reset
-inside a box row is followed by the box background again.
+`renderBottomBorder()`; the editor keeps them for the scroll indicators. They
+use the `borderColor` of the editor theme, which is Pi's `borderMuted`; Pi
+changes only the editor's own `borderColor` for the thinking level and bash
+mode. The autocomplete lines are placed as [ui.md](ui.md#autocomplete-list)
+specifies; `SELECT_PREFIX_WIDTH` is the width of Pi's item prefix. Styled
+content may reset all attributes, so every reset inside a box row is followed
+by the box background again.
 
 Pi copies its editor `paddingX` setting to the editor with `setPaddingX()`,
 also when it changes. The editor keeps the value in its own field, returns it
 from `getPaddingX()`, and adds it to both box margins on each render. The base
 editor keeps padding 0, so its text indent inside the box stays the same. The
-chat, footer, and dialogs use the base margins and do not follow the setting.
+chat, footer, and dialogs use the base margins (`LEFT_MARGIN`, `RIGHT_MARGIN`).
 
 Pi's editor maps mouse events with its own layout, so `handleMouse()` maps
 them back with the box geometry of the last render, including the margins:
-text rows are moved left by the text indent, autocomplete rows also up by the two extra box rows, and
-the width is the inner text width. Box rows without text (top padding, blank,
-status, half row) are passed on the base top border row, where Pi only takes
-focus. When the last render fell back to the base editor, events pass unchanged.
+text rows are moved left by the text indent, autocomplete rows also up by the
+two extra box rows, and the width is the inner text width. Box rows without
+text (top padding, blank, status, half row) are passed on the base top border
+row, where Pi only takes focus. When the last render fell back to the base editor, events pass unchanged.
 
 The accent bar and the thinking level use the editor `borderColor`. Pi
 copies it to the editor and updates it when the thinking level or bash mode
@@ -136,9 +136,10 @@ keeps the last. `session_shutdown` stops watching, and replies after it are
 ignored.
 
 `computeBoxColors()` runs on every render, so it follows the background, the
-theme appearance, and the theme color mode (truecolor or 256 colors). Without a
-reported background it uses Pi's guess for the theme appearance: black for
-dark, white for light.
+theme appearance, and the theme color mode (truecolor or 256 colors). Its
+constants set the lightness step and the light/dark cutoff. Without a reported
+background it uses Pi's guess for the theme appearance: black for dark, white
+for light.
 
 ## Busy Indicator
 
@@ -147,15 +148,15 @@ The editor sets `embedWorkingStatus`, so Pi passes its status indicator
 instead of drawing it above the editor. Pi owns the indicator: it creates,
 animates, colors, and disposes it, and applies `setWorkingMessage`,
 `setWorkingIndicator`, and `setWorkingVisible` from extensions. The editor only
-keeps a reference and draws it after the status line text. The text is cut
-first so the spinner fits; the rest of the indicator is cut to the remaining
-width with `renderInBorder()`.
+keeps a reference and draws it after the status line text
+([ui.md](ui.md#status-line)). The spinner width comes from
+`renderSpinnerInBorder()`, and the rest of the indicator is cut to the
+remaining width with `renderInBorder()`.
 
-For a `working` indicator with Pi's default message (`Working`, or
-`Working (<key> to interrupt)` after an extension reload), only the spinner is
-drawn. Pi keeps the message private, so it is read from the rendered indicator
-without the spinner. Custom messages and other indicator kinds are drawn in
-full, as is an indicator without a spinner frame.
+Pi's default message is `Working`, or `Working (<key> to interrupt)` after an
+extension reload. Pi keeps the message private, so it is read from the
+rendered indicator without the spinner. Custom messages and other indicator
+kinds are drawn in full, as is an indicator without a spinner frame.
 
 ## State
 
