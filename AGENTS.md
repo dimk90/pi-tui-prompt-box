@@ -31,4 +31,5 @@ pnpm check
 - **Shared test process.** `pnpm test` (`test/run.ts`) runs every test file concurrently in one process: no top-level hooks, no observable process-wide state changes, and no mocks that change a shared static method's behavior. Use `test/harness/settings.ts` for Pi settings.
 - **Runtime tests.** Use `test/harness/runtime.ts`: the pinned Pi runs in process against the mock provider in `test/harness/mock-provider.ts`. Never call a real model unless explicitly requested.
 - **Context footprint.** `test/runtime.test.ts` proves a normal turn sends the same provider request with and without the extension; keep it passing.
+- **Demo provider.** For manual runs and demo recordings, use the fake provider described in `demo/README.md` instead of a real model.
 - **TUI changes.** Run real-PTY UI checks only when explicitly requested; follow the `pi-extension` skill.
