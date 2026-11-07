@@ -13,6 +13,7 @@ import {
 	visibleWidth,
 } from "@earendil-works/pi-tui";
 
+import { RESET } from "../src/ui/colors.ts";
 import { PromptBoxEditor } from "../src/ui/prompt-box-editor.ts";
 
 type StatusIndicator = NonNullable<Parameters<PromptBoxEditor["setWorkingStatusIndicator"]>[0]>;
@@ -20,6 +21,7 @@ type StatusIndicatorKind = StatusIndicator["kind"];
 
 // Box columns around the text: left margin, accent bar and inner padding on both sides
 const BOX_COLUMNS = 6;
+const BOX_COLORS = { background: "\x1b[48;2;31;31;31m", halfBlock: "\x1b[38;2;31;31;31m" };
 
 test("PromptBoxEditor shows Pi's busy indicator after the status line text", () => {
 	const editor = createEditor();
@@ -55,7 +57,7 @@ test("PromptBoxEditor cuts the indicator message, then the text, but keeps the s
 });
 
 test("PromptBoxEditor leaves the right padding after the box", () => {
-	const editor = createEditor(() => 1);
+	const editor = createEditor({ readRightPadding: () => 1 });
 	const lines = editor.render(40);
 
 	for (const line of lines)
@@ -151,6 +153,84 @@ test("PromptBoxEditor aligns the autocomplete item text with the input text", ()
 	assert.equal(visibleWidth(autocompleteRow), 40, "full width");
 });
 
+test("PromptBoxEditor places the autocomplete lines below the box, outside its background", () => {
+	const editor = createEditor();
+	editor.setText("/mo");
+	openAutocomplete(editor, [
+		{ value: "model", label: "model" },
+		{ value: "move", label: "move" },
+	]);
+
+	const lines = editor.render(40);
+	const halfRow = lines.findIndex((line) => line.includes("▀"));
+	assert.equal(halfRow, 4, "top padding, input, blank, status, half row");
+
+	const autocompleteRows = lines.slice(halfRow + 1);
+	assert.deepEqual(autocompleteRows.map((row) => stripTerminalSequences(row).trim()), ["→ model", "move"]);
+	for (const row of autocompleteRows)
+		assert.ok(!row.includes(BOX_COLORS.background), "no box background");
+});
+
+test("PromptBoxEditor renders every row at the full width", () => {
+	const editor = createEditor({ status: "Big Pickle OpenCode Zen · medium", readRightPadding: () => 1 });
+	editor.setWorkingStatusIndicator(createIndicator("retry", "⠋", "Retrying"));
+	editor.setText(`/mo ${"word ".repeat(20)}\n${Array.from({ length: 30 }, (_, index) => `line ${index}`).join("\n")}`);
+	const state = Reflect.get(editor, "state") as { cursorLine: number };
+	state.cursorLine = 10;
+	openAutocomplete(editor, [
+		{ value: "model", label: "model" },
+		{ value: "move", label: "move" },
+	]);
+
+	for (const paddingX of [0, 2]) {
+		editor.setPaddingX(paddingX);
+		// Narrowest box: margins with paddingX and the right padding column, and one text column
+		const minWidth = BOX_COLUMNS + 2 * paddingX + 1 + 1;
+		for (let width = minWidth; width <= 80; width++) {
+			const lines = editor.render(width);
+			assert.ok(lines[0]?.includes("┃"), `box drawn at paddingX ${paddingX}, width ${width}`);
+			for (const line of lines)
+				assert.equal(visibleWidth(line), width, `paddingX ${paddingX}, width ${width}`);
+		}
+	}
+});
+
+test("PromptBoxEditor cuts a long status line text at the text width, keeping the inner padding", () => {
+	const editor = createEditor({ status: "Big Pickle OpenCode Zen · medium" });
+
+	const statusRow = editor.render(BOX_COLUMNS + 10).at(-2) ?? "";
+	assert.equal(stripTerminalSequences(statusRow), " ┃  Big Pickle  ");
+});
+
+test("PromptBoxEditor restores the box background after every reset inside a box row", () => {
+	const bold = (text: string) => `\x1b[1m${text}${RESET}`;
+	const editor = createEditor({ status: `${bold("model")} provider`, borderColor: bold });
+	editor.setText(Array.from({ length: 30 }, (_, index) => `line ${index}`).join("\n"));
+	editor.render(40);
+	// Both scroll indicators show, so the padding rows have styled content too
+	const state = Reflect.get(editor, "state") as { cursorLine: number };
+	state.cursorLine = 10;
+
+	const lines = editor.render(40);
+	const boxRows = lines.slice(0, -1);
+	let contentResets = 0;
+	for (const row of boxRows) {
+		// The bar before the box has its own color and reset; after it, the parts are the box content between
+		// resets, then the right margin
+		const box = row.slice(row.indexOf(BOX_COLORS.background));
+		const parts = box.split(RESET);
+		for (const part of parts.slice(0, -1))
+			assert.ok(part.startsWith(BOX_COLORS.background), `background after a reset in ${JSON.stringify(row)}`);
+		assert.equal(parts.at(-1)?.trim(), "", "only the right margin after the box");
+
+		contentResets += parts.length - 2;
+	}
+	assert.equal(contentResets, 3, "resets of the status text and both scroll indicators");
+
+	const halfRow = lines.at(-1) ?? "";
+	assert.ok(halfRow.includes(`${BOX_COLORS.halfBlock}▀`), "half blocks in the box color");
+});
+
 test("PromptBoxEditor places the cursor where the input text is clicked", () => {
 	const editor = createEditor();
 	editor.setText("hello\nworld");
@@ -187,15 +267,28 @@ test("PromptBoxEditor selects the clicked autocomplete item", () => {
 });
 
 /**
+ * Options of a test editor:
+ *   status             fixed status line text, `model` by default
+ *   borderColor        theme `borderColor` for the scroll indicators, plain by default
+ *   readRightPadding   columns added to the right margin, 0 by default
+ */
+interface TestEditorOptions {
+	status?: string;
+	borderColor?: (text: string) => string;
+	readRightPadding?: () => number;
+}
+
+/**
  * Creates the editor with stubs for the parts the render path does not use, and a fixed status text.
  */
-function createEditor(readRightPadding?: () => number): PromptBoxEditor {
+function createEditor(options: TestEditorOptions = {}): PromptBoxEditor {
+	const { status = "model", borderColor = (text: string) => text, readRightPadding } = options;
 	const tui = { requestRender() {}, terminal: { rows: 40 } } as unknown as TUI;
-	const theme = { borderColor: (text: string) => text, selectList: {} } as unknown as EditorTheme;
+	const theme = { borderColor, selectList: {} } as unknown as EditorTheme;
 
-	const readBoxColors = () => ({ background: "\x1b[48;2;31;31;31m", halfBlock: "\x1b[38;2;31;31;31m" });
+	const readBoxColors = () => BOX_COLORS;
 
-	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => "model", readBoxColors, readRightPadding);
+	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => status, readBoxColors, readRightPadding);
 }
 
 /**

@@ -1,10 +1,5 @@
 # TODO
 
-- [ ] Add render tests for the editor.
-  - Box background restored after every reset.
-  - Every row has the full width.
-  - Status line truncation.
-  - Autocomplete lines placed below the box.
 - [ ] Add mock provider:
   - Response with fake text & thinking to demonstrate on a fake session.
   - No real model calls, model response are fake.
