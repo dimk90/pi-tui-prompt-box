@@ -1,13 +1,12 @@
 # pi-tui-prompt-box
 
-> TBD: add logo
-
 <p align="center">
+  <img width="456" src="doc/images/pi-tui-prompt-box.png">
+  <br>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
+  <a href="https://pi.dev/packages/pi-tui-prompt-box"><img src="https://img.shields.io/badge/Pi-Package-6366F1?style=flat-square" alt="Pi Package"></a>
   <a href="https://www.npmjs.com/package/pi-tui-prompt-box"><img src="https://img.shields.io/npm/v/pi-tui-prompt-box?style=flat-square&amp;logoColor=white" alt="npm version"></a>
 </p>
-
-> TBD: add badge for pi.dev
 
 <br>
 
