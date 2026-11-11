@@ -23,4 +23,4 @@
 
 ## [0.0.1] - 01.11.2026
 
-🌱 Prof-of-Concept implementation.
+🌱 Proof-of-Concept implementation.

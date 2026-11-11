@@ -1,7 +1,7 @@
 {
 	"name": "pi-tui-prompt-box",
 	"version": "0.0.1",
-	"description": "Replaces Pi's prompt editor with a filled box that shows the model, thinking level, and busy state",
+	"description": "A prompt box style for Pi that combines with other styling extensions",
 	"type": "module",
 	"license": "MIT",
 	"author": "Dmitry Makarov",
@@ -15,8 +15,10 @@
 	},
 	"keywords": [
 		"pi",
+		"pi-package",
 		"pi-extension",
-		"coding-agent"
+		"coding-agent",
+		"theme"
 	],
 	"engines": {
 		"node": ">=22.19.0"

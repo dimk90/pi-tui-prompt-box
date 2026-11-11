@@ -1,7 +1,7 @@
 # pi-tui-prompt-box
 
 <p align="center">
-  <img width="456" src="doc/images/pi-tui-prompt-box.png">
+  <img width="456" src="doc/images/pi-tui-prompt-box.png" alt="pi-tui-prompt-box preview">
   <br>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
   <a href="https://pi.dev/packages/pi-tui-prompt-box"><img src="https://img.shields.io/badge/Pi-Package-6366F1?style=flat-square" alt="Pi Package"></a>
@@ -12,18 +12,15 @@
 
 An alternative style for the prompt input in [Pi](https://pi.dev).
 
-> TBD: update extension description in project.json
-> TBD: add pi extension tag for pi.dev visibility
+It styles the prompt box and nothing else. Other TUI components are only moved
+to line up with the box. Their content and styling stay unchanged.
+
+It is a building block, not a full theme: combine it with your favorite footer,
+completion menu, or any other styling extension.
 
 ## Demo
 
-### Mode Switching + Bash
-
-TBD
-
-### Spinner + Text Typing (text color)
-
-TBD
+![Demo: thinking levels and bash mode](doc/images/demo.gif)
 
 ## Install
 
@@ -52,9 +49,9 @@ sections, or messages to the model context.
 
 ## My Other Stuff
 
-📌 [S-VHS](https://github.com/dimk90/s-vhs) - a terminal recorder used to create the demo GIFs.
+📌 [S-VHS](https://github.com/dimk90/s-vhs) - A terminal recorder used to create the demo GIFs.
 
-📌 [pi-context-view](https://github.com/dimk90/pi-context-view) - an extension to visualize context usage and inspect its hidden parts.
+📌 [pi-context-view](https://github.com/dimk90/pi-context-view) - Pi extension to visualize context usage and inspect its hidden parts.
 
 ## License
 
