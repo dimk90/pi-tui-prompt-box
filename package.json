@@ -1,6 +1,6 @@
 {
 	"name": "pi-tui-prompt-box",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "A prompt box style for Pi that combines with other styling extensions",
 	"type": "module",
 	"license": "MIT",
@@ -36,7 +36,7 @@
 		"extensions": [
 			"./src/index.ts"
 		],
-		"image": "https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/refs/heads/develop/doc/images/pi-tui-prompt-box.png"
+		"image": "https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/d40318c625f33ef90f99108bb0536a8872174cab/doc/images/pi-tui-prompt-box.png"
 	},
 	"peerDependencies": {
 		"@earendil-works/pi-coding-agent": "*",
