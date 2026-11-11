@@ -35,7 +35,8 @@
 	"pi": {
 		"extensions": [
 			"./src/index.ts"
-		]
+		],
+		"image": "https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/refs/heads/develop/doc/images/pi-tui-prompt-box.png"
 	},
 	"peerDependencies": {
 		"@earendil-works/pi-coding-agent": "*",
