@@ -68,8 +68,9 @@ publish.
    ```
 
 1. Check the local pi version and update the exact development pin of every
-   `@earendil-works/pi-*` package in `package.json` to match it. Keep their
-   peer dependencies as `"*"`, then refresh `pnpm-lock.yaml`:
+   `@earendil-works/pi-*` package in `package.json` to match it. Keep a
+   `"*"` peer dependency for exactly the packages `src/` imports, then refresh
+   `pnpm-lock.yaml`:
 
    ```bash
    pi --version

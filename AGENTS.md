@@ -20,7 +20,7 @@ The box is drawn only in TUI mode; other modes have no editor and are unaffected
 - **Module boundaries.** Keep `src/index.ts` to wiring: register handlers and hold closure state. Put independently testable logic in focused modules under `src/`, and TUI components in `src/ui/`.
 - **Changelog headings.** Write version headings as `## [X.Y.Z] - DD.MM.YYYY`, without a `v` prefix, so Pi can parse them.
 - **Changelog entries.** Keep the text of each `CHANGELOG.md` bullet, after its `[scope]` tag, to about 80 characters.
-- **Dependency contract.** Declare only the Pi packages (`pi-coding-agent`, `pi-tui`, `pi-ai`, `pi-agent-core`) the code imports, each as a `"*"` peer dependency with an exact development pin matching `pi --version`; run `pnpm install` after changing any pin.
+- **Dependency contract.** Declare only the Pi packages (`pi-coding-agent`, `pi-tui`, `pi-ai`, `pi-agent-core`) the code imports, each with an exact development pin matching `pi --version`; make exactly the ones `src/` imports `"*"` peer dependencies, so packages used only by `test/` or `demo/` stay development-only. Run `pnpm install` after changing any pin.
 
 ## Verification
 

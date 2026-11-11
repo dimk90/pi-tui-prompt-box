@@ -434,24 +434,29 @@ _release_check_package_metadata() {
     # Example:
     #   _release_check_package_metadata
     #
-    local package_name pi_version pi_packages package peer pin
+    local package_name pi_version pi_packages imported_packages package peer pin
+    local expected_peer
     local peers_valid=true pins_valid=true peer_report='' pin_report=''
 
     package_name="$(_release_package_value 'name')"
     pi_version="$(pi --version 2>/dev/null | tr -d '\r\n')"
     pi_version="${pi_version#v}"
     [[ $pi_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || pins_valid=false
-    # Every Pi package the extension declares must stay a `*` peer dependency
-    # with an exact development pin
-    pi_packages="$(_release_pi_packages)"
-    [[ -n $pi_packages ]] || peers_valid=false
+    # Every Pi package needs an exact development pin, but only the ones src
+    # imports reach the user, so only those are `*` peer dependencies
+    imported_packages="$(_release_imported_pi_packages)"
+    pi_packages="$(printf '%s\n%s\n' "$(_release_pi_packages)" "$imported_packages" | sort -u)"
+    [[ -n $imported_packages ]] || peers_valid=false
     while IFS= read -r package; do
         [[ -n $package ]] || continue
         peer="$(_release_package_value "peerDependencies.@earendil-works/${package}")"
         pin="$(_release_package_value "devDependencies.@earendil-works/${package}")"
-        [[ $peer == '*' ]] || peers_valid=false
+        expected_peer=''
+        grep -qxF -- "$package" <<< "$imported_packages" && expected_peer='*'
+        [[ $peer == "$expected_peer" ]] || peers_valid=false
         [[ $pin == "$pi_version" ]] || pins_valid=false
-        peer_report+="$(printf '\n%s: %s' "$package" "${peer:-missing}")"
+        peer_report+="$(printf '\n%s: %s, expected %s' "$package" "${peer:-missing}" \
+                               "${expected_peer:-missing}")"
         pin_report+="$(printf '\n%s: %s' "$package" "${pin:-missing}")"
     done <<< "$pi_packages"
 
@@ -462,9 +467,10 @@ _release_check_package_metadata() {
                        "found: ${package_name:-missing}"
     fi
     if [[ $peers_valid == true ]]; then
-        _release_pass 'Pi peer dependencies remain *'
+        _release_pass 'Pi peer dependencies are * for exactly the packages src imports'
     else
-        _release_block 'Pi peer dependencies must remain *' "${peer_report#$'\n'}"
+        _release_block 'Pi peer dependencies must be * for exactly the packages src imports' \
+                       "${peer_report#$'\n'}"
     fi
 
     if [[ $pins_valid == true ]]; then
@@ -1563,6 +1569,23 @@ _release_pi_packages() {
             .sort();
         process.stdout.write(piPackages.join("\n"));
     '
+}
+
+
+_release_imported_pi_packages() {
+    #
+    # Print the Pi package names, without the @earendil-works/ scope, that the
+    # published sources under src/ import, one per line.
+    #
+    # Parameters:
+    #   None.
+    #
+    # Example:
+    #   imported_packages="$(_release_imported_pi_packages)"
+    #
+    grep -rhoE --include='*.ts' "[\"']@earendil-works/pi-[a-z-]+[\"'/]" src |
+        sed -E 's#^.@earendil-works/##; s#.$##' |
+        sort -u
 }
 
 
