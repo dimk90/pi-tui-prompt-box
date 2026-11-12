@@ -5,6 +5,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { type Component, stripTerminalSequences, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
+import type { RoutedModel } from "../routed-model.ts";
 import { LEFT_MARGIN, RIGHT_MARGIN } from "./prompt-box-editor.ts";
 import type { ReadRightPadding } from "./scrollbar-padding.ts";
 
@@ -20,6 +21,8 @@ const MIN_MODEL_GAP = 2;
 export interface FooterModelState {
 	model: ExtensionContext["model"];
 	thinkingLevel: string;
+	/** Model a virtual `model` routed the latest response to; Pi's footer adds it after `→`. */
+	routedModel?: RoutedModel;
 }
 
 /**
@@ -45,14 +48,14 @@ export function findBuiltInFooter(root: Component): Component | undefined {
 }
 
 /**
- * Removes the model part that Pi's built-in footer right-aligns on its stats line: `(provider) model • level`.
+ * Removes the model part that Pi's built-in footer right-aligns on its stats line: `(provider) model • level`,
+ * with ` → model • level` after it for a routed model.
  *
  * The prompt box status line already shows it. The line is changed only when it ends with exactly the text
- * Pi builds from `state`; otherwise, for example when Pi truncated it or shows a routed model, it is
- * returned unchanged.
+ * Pi builds from `state`; otherwise, for example when Pi truncated it, it is returned unchanged.
  */
 export function removeModelPart(line: string, state: FooterModelState): string {
-	const { model, thinkingLevel } = state;
+	const { model, thinkingLevel, routedModel } = state;
 	if (!model)
 		return line;
 
@@ -60,9 +63,17 @@ export function removeModelPart(line: string, state: FooterModelState): string {
 	if (model.reasoning)
 		modelPart += thinkingLevel === "off" ? " • thinking off" : ` • ${thinkingLevel}`;
 
+	// Pi may show no routed model where the status line still does, for example after compaction
+	const modelParts = [modelPart];
+	if (routedModel) {
+		const routedLevel = routedModel.thinkingLevel ? ` • ${routedModel.thinkingLevel}` : "";
+		modelParts.unshift(`${modelPart} → ${routedModel.model.id}${routedLevel}`);
+	}
+
 	const plainLine = stripTerminalSequences(line);
 	const gap = " ".repeat(MIN_MODEL_GAP);
-	for (const candidate of [`(${model.provider}) ${modelPart}`, modelPart]) {
+	const candidates = modelParts.flatMap((part) => [`(${model.provider}) ${part}`, part]);
+	for (const candidate of candidates) {
 		if (!plainLine.endsWith(gap + candidate))
 			continue;
 

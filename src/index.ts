@@ -7,6 +7,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { RgbColor, TUI } from "@earendil-works/pi-tui";
 
+import { findRoutedModel } from "./routed-model.ts";
 import { watchTerminalBackground } from "./terminal-background.ts";
 import { computeBoxColors, type ReadBoxColors } from "./ui/colors.ts";
 import { padPiContainers } from "./ui/padded-containers.ts";
@@ -31,6 +32,7 @@ export default function promptBox(pi: ExtensionAPI): void {
 				model: ctx.model,
 				getProviderName: (provider) => ctx.modelRegistry.getProviderDisplayName(provider),
 				thinkingLevel: pi.getThinkingLevel(),
+				routedModel: findRoutedModel(ctx),
 			});
 
 		let terminalBackground: RgbColor | undefined;
@@ -62,7 +64,11 @@ export default function promptBox(pi: ExtensionAPI): void {
 		if (!builtInFooter)
 			return;
 
-		const readModelState = () => ({ model: ctx.model, thinkingLevel: pi.getThinkingLevel() });
+		const readModelState = () => ({
+			model: ctx.model,
+			thinkingLevel: pi.getThinkingLevel(),
+			routedModel: findRoutedModel(ctx),
+		});
 		ctx.ui.setFooter((tui) => new PaddedFooter(builtInFooter, readModelState, () => readScrollbarPadding(tui)));
 	});
 

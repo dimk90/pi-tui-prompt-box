@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.1] - Unreleased
+
+### New
+* `[ui]` Show the routed model of a virtual model in the status line, not in the footer.
+
 ## [0.1.0] - 11.11.2026
 
 ### New
