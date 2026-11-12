@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 
 import type { RoutedModel } from "../src/routed-model.ts";
-import { formatStatus } from "../src/ui/status-line.ts";
+import { formatStatus, readRoutedLevelColor } from "../src/ui/status-line.ts";
 
 const REASONING_MODEL = { name: "Big Pickle", provider: "opencode", reasoning: true } as NonNullable<
 	ExtensionContext["model"]
@@ -76,4 +76,13 @@ test("formatStatus colors the routed thinking level with the theme color of its 
 
 	assert.ok(status.includes("<level>high</><dim>  →  </>"));
 	assert.ok(status.endsWith("<dim> · </><thinking-low>low</>"));
+});
+
+test("readRoutedLevelColor returns a color only when the status line shows a routed level", () => {
+	const theme = { getThinkingBorderColor: (level: string) => (text: string) => `<${level}>${text}</>` } as unknown as Theme;
+
+	assert.equal(readRoutedLevelColor(theme, { model: REASONING_MODEL, thinkingLevel: "low" })?.("x"), "<low>x</>");
+	assert.equal(readRoutedLevelColor(theme, undefined), undefined);
+	assert.equal(readRoutedLevelColor(theme, { model: REASONING_MODEL }), undefined);
+	assert.equal(readRoutedLevelColor(theme, { model: { ...REASONING_MODEL, reasoning: false }, thinkingLevel: "low" }), undefined);
 });

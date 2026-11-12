@@ -31,6 +31,20 @@ export interface StatusLineOptions {
 }
 
 /**
+ * Returns the theme color of the routed thinking level, or `undefined` when the status line shows no routed
+ * level: without a routed model, without its level, or for a routed model without reasoning support.
+ */
+export function readRoutedLevelColor(
+	theme: Theme,
+	routedModel: RoutedModel | undefined,
+): ((text: string) => string) | undefined {
+	if (!routedModel?.model.reasoning || !routedModel.thinkingLevel)
+		return undefined;
+
+	return theme.getThinkingBorderColor(routedModel.thinkingLevel);
+}
+
+/**
  * Builds the status line text: model, provider and thinking level, then the routed model in the same format.
  * Like Pi's footer, the level shows only for models with reasoning support, and level `off` shows as `thinking off`.
  * In bash mode, `Bash` replaces them. Pi's busy indicator is added by the editor.
@@ -51,9 +65,8 @@ export function formatStatus(options: StatusLineOptions): string {
 		return selectedText;
 
 	// The routed level has the color of its own level, which can differ from the accent bar
-	const routedLevel = routedModel.thinkingLevel;
-	const routedLevelColor = routedLevel ? theme.getThinkingBorderColor(routedLevel) : levelColor;
-	const routedText = formatModel(options, routedModel.model, routedLevel, routedLevelColor);
+	const routedLevelColor = readRoutedLevelColor(theme, routedModel) ?? levelColor;
+	const routedText = formatModel(options, routedModel.model, routedModel.thinkingLevel, routedLevelColor);
 
 	return `${selectedText}${theme.fg("dim", "  →  ")}${routedText}`;
 }

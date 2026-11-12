@@ -59,6 +59,9 @@ From left to right, after the inner padding:
   Pi's default working message (`Working`) is dropped, so a normal turn shows
   only the spinner; other messages stay.
   Pi colors it: working and compaction in the accent bar color, retry in `warning`.
+  When the status line shows a routed thinking level, working and compaction
+  use the color of that level instead, so the spinner matches the last level on
+  the line. In bash mode they keep the bash mode color.
   When the line is too narrow, the text is cut first, then the indicator
   message; the spinner stays.
 

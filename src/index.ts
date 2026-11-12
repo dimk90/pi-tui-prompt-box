@@ -14,7 +14,7 @@ import { padPiContainers } from "./ui/padded-containers.ts";
 import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
 import { readScrollbarPadding } from "./ui/scrollbar-padding.ts";
-import { formatStatus } from "./ui/status-line.ts";
+import { formatStatus, readRoutedLevelColor } from "./ui/status-line.ts";
 
 /**
  * Registers the prompt box editor for every session.
@@ -44,7 +44,13 @@ export default function promptBox(pi: ExtensionAPI): void {
 		ctx.ui.setEditorComponent((tui, theme, keybindings) => {
 			editorTui = tui;
 			const readRightPadding = () => readScrollbarPadding(tui);
-			editor = new PromptBoxEditor(tui, theme, keybindings, renderStatus, readBoxColors, readRightPadding);
+			const readBusyColor = () => readRoutedLevelColor(ctx.ui.theme, findRoutedModel(ctx));
+			editor = new PromptBoxEditor(tui, theme, keybindings,
+				renderStatus,
+				readBoxColors,
+				readRightPadding,
+				readBusyColor,
+			);
 			return editor;
 		});
 

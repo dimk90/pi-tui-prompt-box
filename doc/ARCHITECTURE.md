@@ -129,7 +129,7 @@ two extra box rows, and the width is the inner text width. Box rows without
 text (top padding, blank, status, half row) are passed on the base top border
 row, where Pi only takes focus. When the last render fell back to the base editor, events pass unchanged.
 
-The accent bar and the thinking level use the editor `borderColor`. Pi
+The accent bar and the thinking level use the editor `borderColor` Pi set. Pi
 copies it to the editor and updates it when the thinking level or bash mode
 changes, so the box never computes it. Bash mode for the status line is
 checked with Pi's rules: the input, without leading whitespace, starts with
@@ -165,6 +165,14 @@ keeps a reference and draws it after the status line text
 ([ui.md](ui.md#status-line)). The spinner width comes from
 `renderSpinnerInBorder()`, and the rest of the indicator is cut to the
 remaining width with `renderInBorder()`.
+
+Pi colors the working and compaction indicators with the editor `borderColor`,
+which it reads back on every frame. To give them the routed thinking level
+color ([ui.md](ui.md#status-line)), the editor defines `borderColor` on its
+own instance as an accessor: Pi's writes are kept as the accent bar color,
+and reads return `readBusyColor()`, or the bar color when it returns nothing,
+in bash mode, and while the base editor renders the fallback layout. The base
+class declares `borderColor` as a field, so the accessor can't be a class member.
 
 Pi's default message is `Working`, or `Working (<key> to interrupt)` after an
 extension reload. Pi keeps the message private, so it is read from the
