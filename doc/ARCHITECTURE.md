@@ -68,17 +68,30 @@ event, so the padding follows mode switches and changes of the scrollbar
 setting.
 
 `PaddedFooter` removes the model part of the footer stats line (second line)
-([ui.md](ui.md#other-parts-of-pi)). It builds that text from `ctx.model` and
-the thinking level, as Pi does, and cuts it only when the stats line ends with
-it after at least two spaces. Otherwise the line stays unchanged, for example
-when Pi truncated it, shows a routed model, or changed its format. Custom
+([ui.md](ui.md#other-parts-of-pi)). It builds that text from `ctx.model`, the
+thinking level, and the routed model, as Pi does, and cuts it only when the
+stats line ends with it after at least two spaces. Otherwise the line stays
+unchanged, for example when Pi truncated it or changed its format. Custom
 footers from other extensions are never wrapped; hiding their parts is their job.
+
+## Routed Model
+
+Under a virtual model, Pi's session knows the routed model: the physical model
+of the latest successful response. Pi gives extensions no access to it, so
+`findRoutedModel()` follows the same rules: only when `ctx.model` has the
+virtual model API (`pi-virtual`), it walks the session branch up from the leaf
+to the first assistant message that did not fail or abort, and looks its model
+up in `ctx.modelRegistry`. It runs on every render and usually stops near the
+leaf. Pi reads the messages of the current context instead, so after a
+compaction Pi's footer may show no routed model while the status line still
+does; `PaddedFooter` therefore also matches the model part without it.
 
 ## Module Boundaries
 
 | Path                          | Responsibility                                                  |
 | ----------------------------- | --------------------------------------------------------------- |
 | `src/index.ts`                | Wiring: factory and the `session_start` handler.                |
+| `src/routed-model.ts`         | Routed model of a virtual model, read from the session branch.  |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.    |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.   |
 | `src/ui/padded-containers.ts` | Pi's chat, queued messages, widgets, dialogs moved by margins.  |
@@ -116,7 +129,7 @@ two extra box rows, and the width is the inner text width. Box rows without
 text (top padding, blank, status, half row) are passed on the base top border
 row, where Pi only takes focus. When the last render fell back to the base editor, events pass unchanged.
 
-The accent bar and the thinking level use the editor `borderColor`. Pi
+The accent bar and the thinking level use the editor `borderColor` Pi set. Pi
 copies it to the editor and updates it when the thinking level or bash mode
 changes, so the box never computes it. Bash mode for the status line is
 checked with Pi's rules: the input, without leading whitespace, starts with
@@ -153,6 +166,14 @@ keeps a reference and draws it after the status line text
 `renderSpinnerInBorder()`, and the rest of the indicator is cut to the
 remaining width with `renderInBorder()`.
 
+Pi colors the working and compaction indicators with the editor `borderColor`,
+which it reads back on every frame. To give them the routed thinking level
+color ([ui.md](ui.md#status-line)), the editor defines `borderColor` on its
+own instance as an accessor: Pi's writes are kept as the accent bar color,
+and reads return `readBusyColor()`, or the bar color when it returns nothing,
+in bash mode, and while the base editor renders the fallback layout. The base
+class declares `borderColor` as a field, so the accessor can't be a class member.
+
 Pi's default message is `Working`, or `Working (<key> to interrupt)` after an
 extension reload. Pi keeps the message private, so it is read from the
 rendered indicator without the spinner. Custom messages and other indicator
@@ -163,7 +184,7 @@ kinds are drawn in full, as is an indicator without a spinner frame.
 Nothing is persisted. The editor keeps Pi's current status indicator. The
 extension keeps the function that removes the container padding, the function
 that stops watching the terminal background, and the last reported background.
-Model and thinking level are read from the context at render time.
+Model, thinking level, and routed model are read from the context at render time.
 
 ## Required Invariants
 

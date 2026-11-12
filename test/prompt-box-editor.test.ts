@@ -48,6 +48,32 @@ test("PromptBoxEditor shows only the spinner for Pi's default working message", 
 	assert.equal(renderStatusRow(editor, 60), "model  Working");
 });
 
+test("PromptBoxEditor gives Pi the busy color for its indicator and keeps the bar color Pi set", () => {
+	let busyColor: ((text: string) => string) | undefined;
+	const editor = createEditor({ readBusyColor: () => busyColor });
+	editor.borderColor = (text) => `<bar>${text}</>`;
+
+	// Pi colors its working indicator with the editor borderColor it reads on every frame
+	const indicator = createIndicator("working", "⠋", "Working");
+	indicator.renderSpinnerInBorder = () => editor.borderColor("⠋");
+	indicator.renderInBorder = () => `${editor.borderColor("⠋")} Working`;
+	editor.setWorkingStatusIndicator(indicator);
+
+	/** Renders the accent bar and the status row content, with the test color tags kept. */
+	const renderBarAndStatus = () => {
+		const row = stripTerminalSequences(editor.render(40).at(-2) ?? "").trim();
+		return row.replace(/ {2,}/g, " ");
+	};
+
+	assert.equal(renderBarAndStatus(), "<bar>┃</> model <bar>⠋</>", "no routed level");
+
+	busyColor = (text) => `<routed>${text}</>`;
+	assert.equal(renderBarAndStatus(), "<bar>┃</> model <routed>⠋</>");
+
+	editor.setText("!ls");
+	assert.equal(renderBarAndStatus(), "<bar>┃</> model <bar>⠋</>", "bash mode");
+});
+
 test("PromptBoxEditor cuts the indicator message, then the text, but keeps the spinner", () => {
 	const editor = createEditor();
 	editor.setWorkingStatusIndicator(createIndicator("retry", "⠋", "Retrying"));
@@ -271,24 +297,31 @@ test("PromptBoxEditor selects the clicked autocomplete item", () => {
  *   status             fixed status line text, `model` by default
  *   borderColor        theme `borderColor` for the scroll indicators, plain by default
  *   readRightPadding   columns added to the right margin, 0 by default
+ *   readBusyColor      busy indicator color, the accent bar color by default
  */
 interface TestEditorOptions {
 	status?: string;
 	borderColor?: (text: string) => string;
 	readRightPadding?: () => number;
+	readBusyColor?: () => ((text: string) => string) | undefined;
 }
 
 /**
  * Creates the editor with stubs for the parts the render path does not use, and a fixed status text.
  */
 function createEditor(options: TestEditorOptions = {}): PromptBoxEditor {
-	const { status = "model", borderColor = (text: string) => text, readRightPadding } = options;
+	const { status = "model", borderColor = (text: string) => text, readRightPadding, readBusyColor } = options;
 	const tui = { requestRender() {}, terminal: { rows: 40 } } as unknown as TUI;
 	const theme = { borderColor, selectList: {} } as unknown as EditorTheme;
 
 	const readBoxColors = () => BOX_COLORS;
 
-	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager, () => status, readBoxColors, readRightPadding);
+	return new PromptBoxEditor(tui, theme, {} as KeybindingsManager,
+		() => status,
+		readBoxColors,
+		readRightPadding,
+		readBusyColor,
+	);
 }
 
 /**

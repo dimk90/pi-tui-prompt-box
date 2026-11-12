@@ -46,11 +46,22 @@ From left to right, after the inner padding:
 - `medium` — thinking level as Pi names it (lower case), same color as the accent bar.
   Level `off` shows as `thinking off`. Like Pi's footer, models without
   reasoning support show no level and no separator.
+- `  →  GPT-5.6 Luna OpenAI · medium` — routed model, only under a virtual model
+  (a router): the model that gave the latest successful response, in the same
+  format as the selected model. Pi's footer shows it the same way, with the
+  model id. Two spaces go on each side of the `→`. The name is theme `text`;
+  the `→`, provider, and separator are theme `dim`. The level has the theme
+  color of its own level, the one the accent bar would have for it, so two
+  colors show that the levels differ. The level is hidden when the response has none or the routed model has no
+  reasoning support. Before the first response, nothing is added.
 - `⠏` — Pi's busy indicator, two spaces after the text: working,
   retry, compaction, or branch summary, with the message other extensions set.
   Pi's default working message (`Working`) is dropped, so a normal turn shows
   only the spinner; other messages stay.
   Pi colors it: working and compaction in the accent bar color, retry in `warning`.
+  When the status line shows a routed thinking level, working and compaction
+  use the color of that level instead, so the spinner matches the last level on
+  the line. In bash mode they keep the bash mode color.
   When the line is too narrow, the text is cut first, then the indicator
   message; the spinner stays.
 
@@ -81,8 +92,9 @@ spaces to the full width, like the box rows.
 
 Footer: Pi's built-in footer, below the box, keeps its content but is moved
 right by the box margins, so it starts in the same column as the accent bar.
-The model part on the right of its stats line (`(provider) model • level`) is
-removed, as the status line already shows it. A routed model (`→ …`) stays.
+The model part on the right of its stats line (`(provider) model • level`,
+with `→ model • level` after it for a routed model) is removed, as the status
+line already shows it.
 Custom footers from other extensions are left unchanged.
 
 Chat, queued messages, and extension widgets: moved right by the box margins,

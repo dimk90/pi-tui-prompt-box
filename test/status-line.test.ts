@@ -3,7 +3,8 @@ import { test } from "node:test";
 
 import type { ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 
-import { formatStatus } from "../src/ui/status-line.ts";
+import type { RoutedModel } from "../src/routed-model.ts";
+import { formatStatus, readRoutedLevelColor } from "../src/ui/status-line.ts";
 
 const REASONING_MODEL = { name: "Big Pickle", provider: "opencode", reasoning: true } as NonNullable<
 	ExtensionContext["model"]
@@ -12,14 +13,22 @@ const REASONING_MODEL = { name: "Big Pickle", provider: "opencode", reasoning: t
 /**
  * Formats a plain status line for a model, with colors that keep the text unchanged.
  */
-function formatPlainStatus(model: ExtensionContext["model"], thinkingLevel: string): string {
+function formatPlainStatus(
+	model: ExtensionContext["model"],
+	thinkingLevel: string,
+	routedModel?: RoutedModel,
+): string {
 	return formatStatus({
-		theme: { fg: (_color: string, text: string) => text } as unknown as Theme,
+		theme: {
+			fg: (_color: string, text: string) => text,
+			getThinkingBorderColor: () => (text: string) => text,
+		} as unknown as Theme,
 		levelColor: (text) => text,
 		bashMode: "off",
 		model,
 		getProviderName: (provider) => (provider === "opencode" ? "OpenCode Zen" : provider),
 		thinkingLevel,
+		routedModel,
 	});
 }
 
@@ -38,4 +47,42 @@ test("formatStatus hides the thinking level for a model without reasoning suppor
 
 test("formatStatus hides the thinking level without a model", () => {
 	assert.equal(formatPlainStatus(undefined, "off"), "no model");
+});
+
+test("formatStatus shows the routed model after the selected one, in the same format", () => {
+	const router = { ...REASONING_MODEL, name: "Auto", provider: "router" };
+
+	assert.equal(formatPlainStatus(router, "high", { model: REASONING_MODEL, thinkingLevel: "off" }),
+		"Auto router · high  →  Big Pickle OpenCode Zen · thinking off");
+	assert.equal(formatPlainStatus(router, "high", { model: REASONING_MODEL }),
+		"Auto router · high  →  Big Pickle OpenCode Zen", "unknown level");
+	assert.equal(formatPlainStatus(router, "high", { model: { ...REASONING_MODEL, reasoning: false }, thinkingLevel: "off" }),
+		"Auto router · high  →  Big Pickle OpenCode Zen", "no reasoning support");
+});
+
+test("formatStatus colors the routed thinking level with the theme color of its own level", () => {
+	const status = formatStatus({
+		theme: {
+			fg: (color: string, text: string) => `<${color}>${text}</>`,
+			getThinkingBorderColor: (level: string) => (text: string) => `<thinking-${level}>${text}</>`,
+		} as unknown as Theme,
+		levelColor: (text) => `<level>${text}</>`,
+		bashMode: "off",
+		model: REASONING_MODEL,
+		getProviderName: (provider) => provider,
+		thinkingLevel: "high",
+		routedModel: { model: REASONING_MODEL, thinkingLevel: "low" },
+	});
+
+	assert.ok(status.includes("<level>high</><dim>  →  </>"));
+	assert.ok(status.endsWith("<dim> · </><thinking-low>low</>"));
+});
+
+test("readRoutedLevelColor returns a color only when the status line shows a routed level", () => {
+	const theme = { getThinkingBorderColor: (level: string) => (text: string) => `<${level}>${text}</>` } as unknown as Theme;
+
+	assert.equal(readRoutedLevelColor(theme, { model: REASONING_MODEL, thinkingLevel: "low" })?.("x"), "<low>x</>");
+	assert.equal(readRoutedLevelColor(theme, undefined), undefined);
+	assert.equal(readRoutedLevelColor(theme, { model: REASONING_MODEL }), undefined);
+	assert.equal(readRoutedLevelColor(theme, { model: { ...REASONING_MODEL, reasoning: false }, thinkingLevel: "low" }), undefined);
 });

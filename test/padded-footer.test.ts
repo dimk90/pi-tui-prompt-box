@@ -80,6 +80,24 @@ test("removeModelPart keeps lines that do not end with the exact model part", ()
 	assert.equal(removeModelPart("0.0%/100k  model", { model: undefined, thinkingLevel: "off" }), "0.0%/100k  model");
 });
 
+test("removeModelPart removes the routed model, also when Pi shows none", () => {
+	const model = createModel({ reasoning: true });
+	const routedModel = { model: { ...createModel({ reasoning: true }), id: "routed" }, thinkingLevel: "low" as const };
+	const state = { model, thinkingLevel: "high", routedModel };
+
+	for (const line of [
+		"0.0%/100k  model • high → routed • low",
+		"0.0%/100k  (provider) model • high → routed • low",
+		"0.0%/100k  model • high",
+	]) assert.equal(stripTerminalSequences(removeModelPart(line, state)), "0.0%/100k");
+
+	const stateWithoutLevel = { ...state, routedModel: { model: routedModel.model } };
+	assert.equal(stripTerminalSequences(removeModelPart("0.0%/100k  model • high → routed", stateWithoutLevel)), "0.0%/100k");
+
+	const otherLine = "0.0%/100k  model • high → other • low";
+	assert.equal(removeModelPart(otherLine, state), otherLine);
+});
+
 /** Footer data with no git branch, one provider, and no extension statuses. */
 function createFooterData(): ReadonlyFooterDataProvider {
 	return {

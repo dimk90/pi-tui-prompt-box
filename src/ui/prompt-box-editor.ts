@@ -57,6 +57,12 @@ const BOTTOM_BORDER_MARKER = "\x00prompt-box-bottom-border\x00";
  */
 export type RenderStatus = (barColor: (text: string) => string, bashMode: BashMode) => string;
 
+/**
+ * Returns the color of Pi's busy indicator when it differs from the accent bar: the routed thinking level
+ * color. Returns `undefined` to use the accent bar color.
+ */
+export type ReadBusyColor = () => ((text: string) => string) | undefined;
+
 // Pi does not export the StatusIndicator type
 type StatusIndicator = NonNullable<Parameters<CustomEditor["setWorkingStatusIndicator"]>[0]>;
 
@@ -92,7 +98,9 @@ interface BoxStyle {
  * The base editor renders the text lines; this class replaces its borders and
  * wraps every line in the box background. `renderStatus` is called on every
  * render, so the status line always shows the current state. The accent bar
- * uses `borderColor`, which Pi sets from the thinking level and bash mode.
+ * uses the `borderColor` Pi sets from the thinking level and bash mode.
+ * Pi colors its working and compaction indicators with the `borderColor` it reads back, so reading it
+ * returns `readBusyColor()` when set, except in bash mode; the bar keeps the color Pi set.
  * With `embedWorkingStatus`, Pi passes its busy indicators (working, retry,
  * compaction, branch summary) to the editor, which shows them in the status line.
  * `readBoxColors` is called on every render, so the box follows the terminal background.
@@ -109,6 +117,9 @@ export class PromptBoxEditor extends CustomEditor {
 	private readonly editorTheme: EditorTheme;
 	private readonly readBoxColors: ReadBoxColors;
 	private readonly readRightPadding: ReadRightPadding;
+	private readonly readBusyColor: ReadBusyColor;
+	// The borderColor Pi set; the `borderColor` property itself returns the busy indicator color
+	private barColor: (text: string) => string;
 	private statusIndicator: StatusIndicator | undefined;
 	// Pi's editor paddingX setting; the base editor keeps 0, so its text indent inside the box stays the same
 	private boxPaddingX = 0;
@@ -127,12 +138,25 @@ export class PromptBoxEditor extends CustomEditor {
 		renderStatus: RenderStatus,
 		readBoxColors: ReadBoxColors,
 		readRightPadding: ReadRightPadding = () => 0,
+		readBusyColor: ReadBusyColor = () => undefined,
 	) {
 		super(tui, theme, keybindings, { paddingX: 0, embedWorkingStatus: true });
 		this.renderStatus = renderStatus;
 		this.editorTheme = theme;
 		this.readBoxColors = readBoxColors;
 		this.readRightPadding = readRightPadding;
+		this.readBusyColor = readBusyColor;
+
+		// The base class declares borderColor as a field, so the accessor is defined on the instance
+		this.barColor = this.borderColor;
+		Object.defineProperty(this, "borderColor", {
+			configurable: true,
+			enumerable: true,
+			get: () => this.readIndicatorColor(),
+			set: (color: (text: string) => string) => {
+				this.barColor = color;
+			},
+		});
 	}
 
 	// The base class keeps the indicator private, so keep a copy for the status line
@@ -191,7 +215,7 @@ export class PromptBoxEditor extends CustomEditor {
 		this.boxLayout = { leftMargin: margins.left, textWidth, textLineCount: textLines.length };
 
 		const boxWidth = width - margins.left - margins.right - BAR_WIDTH;
-		const barColor = this.borderColor;
+		const barColor = this.barColor;
 		const colors = this.readBoxColors();
 		const status = this.renderStatusLine(textWidth, barColor);
 
@@ -234,6 +258,17 @@ export class PromptBoxEditor extends CustomEditor {
 		const y = event.y <= layout.textLineCount ? event.y : BASE_BORDER_ROW;
 
 		return super.handleMouse({ ...baseEvent, x: event.x - textIndent, y });
+	}
+
+	/**
+	 * Returns the color Pi's busy indicator gets when it reads `borderColor`. In bash mode, and for the base
+	 * editor borders of the fallback layout, it is the accent bar color.
+	 */
+	private readIndicatorColor(): (text: string) => string {
+		if (this.renderingFallback || detectBashMode(this.getText()) !== "off")
+			return this.barColor;
+
+		return this.readBusyColor() ?? this.barColor;
 	}
 
 	/**
