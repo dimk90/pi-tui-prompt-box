@@ -1,9 +1,10 @@
 # Changelog
 
-## [0.1.1] - Unreleased
+## [0.1.1] - 12.11.2026
 
 ### New
 * `[ui]` Show the routed model of a virtual model in the status line, not in the footer.
+* `[ui]` Color the routed thinking level and the busy indicator with that level's color.
 
 ## [0.1.0] - 11.11.2026
 

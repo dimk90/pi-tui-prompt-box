@@ -1,6 +1,6 @@
 {
 	"name": "pi-tui-prompt-box",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "A prompt box style for Pi that combines with other styling extensions",
 	"type": "module",
 	"license": "MIT",
