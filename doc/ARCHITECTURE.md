@@ -10,9 +10,10 @@ repeating it.
 
 ```text
 session_start    → install PromptBoxEditor via setEditorComponent,
+                   load the config,
                    watch the terminal background,
                    pad Pi's chat, queued messages, widgets, and dialogs,
-                   restyle the chat messages,
+                   restyle the chat messages unless the config turns it off,
                    wrap Pi's built-in footer in PaddedFooter via setFooter
 session_shutdown → stop watching the terminal background,
                    remove the container padding and the message styling,
@@ -76,6 +77,18 @@ stats line ends with it after at least two spaces. Otherwise the line stays
 unchanged, for example when Pi truncated it or changed its format. Custom
 footers from other extensions are never wrapped; hiding their parts is their job.
 
+## Config
+
+`loadConfigFile()` reads the global override file
+`<agent dir>/extensions/pi-tui-prompt-box.json` on every `session_start`, in
+TUI mode only, so a reload applies a changed file. The file holds overrides
+only and the extension never writes it. A missing file or key gives the
+default. An unreadable or invalid file, an invalid value, and an unknown key
+each give a warning through `ctx.ui.notify`, and the default is used.
+
+With `userMessageBoxes` set to `false`, `styleChatMessages()` is not called,
+so Pi's chat messages stay unchanged.
+
 ## Chat Messages
 
 Pi gives extensions no way to change how it draws user messages and chat
@@ -126,6 +139,7 @@ does; `PaddedFooter` therefore also matches the model part without it.
 | Path                          | Responsibility                                                  |
 | ----------------------------- | --------------------------------------------------------------- |
 | `src/index.ts`                | Wiring: factory and the `session_start` handler.                |
+| `src/config.ts`               | Config: defaults and the global override file.                  |
 | `src/routed-model.ts`         | Routed model of a virtual model, read from the session branch.  |
 | `src/prompt-thinking-level.ts` | Thinking level of a past prompt, read from the session branch.  |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.    |
@@ -218,7 +232,7 @@ kinds are drawn in full, as is an indicator without a spinner frame.
 
 ## State
 
-Nothing is persisted. The editor keeps Pi's current status indicator. The
+Nothing is persisted. The config is read at session start and not kept after it. The editor keeps Pi's current status indicator. The
 extension keeps the functions that remove the container padding and the message
 styling, the function that stops watching the terminal background, and the last reported background.
 Model, thinking level, and routed model are read from the context at render time.

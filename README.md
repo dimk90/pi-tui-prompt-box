@@ -10,10 +10,12 @@
 
 <br>
 
-An alternative style for the prompt input in [Pi](https://pi.dev).
+An alternative style for the prompt input in [Pi](https://pi.dev): a filled
+prompt box with the model, thinking level, and busy indicator inside.
 
-It styles the prompt box and nothing else. Other TUI components are only moved
-to line up with the box. Their content and styling stay unchanged.
+Your messages in the chat are drawn as the same boxes, which is
+[optional](#configuration). Other TUI components are only moved to line up
+with the prompt box. Their content and styling stay unchanged.
 
 It is a building block, not a full theme: combine it with your favorite footer,
 completion menu, or any other styling extension.
@@ -28,10 +30,10 @@ completion menu, or any other styling extension.
 pi install npm:pi-tui-prompt-box
 ```
 
-## Side Effects
+## What It Changes
 
 - Moves the chat, widgets, dialogs, and footer right so they line up with the
-  prompt box. Their content and styling stay unchanged.
+  prompt box.
 
 - Removes the model, provider, and thinking level from the default footer, as the
   prompt box already shows them. Custom footers stay unchanged.
@@ -39,8 +41,21 @@ pi install npm:pi-tui-prompt-box
 - Moves Pi's busy indicator (spinner and message) into the prompt box. Custom
   spinner widgets stay unchanged.
 
-- Replaces Pi's editor, so it does not work together with other extensions that
-  replace the editor.
+- Draws your messages in the chat as prompt boxes, colored by the thinking level
+  they were sent with, and hides Pi's `Thinking level` chat status. This is
+  [optional](#configuration).
+
+## Configuration
+
+User message boxes are on by default. To keep Pi's own look for your messages
+in the chat, create
+`~/.pi/agent/extensions/pi-tui-prompt-box.json` and run `/reload`:
+
+```json
+{
+  "userMessageBoxes": false
+}
+```
 
 ## Context Footprint
 

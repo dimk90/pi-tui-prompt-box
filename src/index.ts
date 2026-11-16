@@ -7,6 +7,7 @@
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import type { RgbColor, TUI } from "@earendil-works/pi-tui";
 
+import { getConfigFilePath, loadConfigFile } from "./config.ts";
 import { findPromptThinkingLevel } from "./prompt-thinking-level.ts";
 import { findRoutedModel } from "./routed-model.ts";
 import { watchTerminalBackground } from "./terminal-background.ts";
@@ -63,6 +64,11 @@ export default function promptBox(pi: ExtensionAPI): void {
 		if (!editorTui || !editor)
 			return;
 
+		// Read on every session start, so a reload applies a changed file
+		const { config, warnings } = loadConfigFile(getConfigFilePath());
+		for (const warning of warnings)
+			ctx.ui.notify(warning, "warning");
+
 		stopWatchingBackground = watchTerminalBackground(editorTui, (background) => {
 			terminalBackground = background;
 			editorTui?.requestRender();
@@ -78,7 +84,7 @@ export default function promptBox(pi: ExtensionAPI): void {
 
 			return (text) => ctx.ui.theme.getThinkingBorderColor(level)(text);
 		};
-		const chat = findPiContainers(editorTui, editor)?.chat;
+		const chat = config.userMessageBoxes ? findPiContainers(editorTui, editor)?.chat : undefined;
 		if (chat)
 			restoreChatMessages = styleChatMessages(chat, { readBoxColors, resolveBarColor });
 

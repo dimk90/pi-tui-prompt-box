@@ -89,6 +89,10 @@ Pi's chat status `Thinking level: <level>`, shown after a level change, is
 hidden, as the accent bar and the status line already show the level. Other
 statuses stay, also `Default thinking level: <level>`.
 
+With `"userMessageBoxes": false` in the [config](../README.md#configuration),
+Pi draws the user messages and shows the status itself. The change applies on
+the next session start or `/reload`.
+
 ## Bash mode
 
 - Input starts with `!`: the accent bar uses Pi's bash mode color, and

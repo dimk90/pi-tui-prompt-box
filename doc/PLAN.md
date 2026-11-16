@@ -5,7 +5,7 @@
 	- Remove Pi thinking status in the chat "Thinking level: max", etc.
 		- Because it will be reflected in color of the prompt/message in the session history.
 
-- [ ] Make prompt boxes for user messages/prompts options.
+- [x] Make prompt boxes for user messages/prompts optional.
   - Opt-out via config.
   - Document in README.
   - The purpose is to avoid modularity violation and side effects.
