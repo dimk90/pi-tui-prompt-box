@@ -78,10 +78,11 @@ footers from other extensions are never wrapped; hiding their parts is their job
 
 ## Chat Messages
 
-Pi gives extensions no way to change how it draws user messages. So `styleChatMessages()` sets its own `addChild` on the chat
+Pi gives extensions no way to change how it draws user messages and chat
+statuses. So `styleChatMessages()` sets its own `addChild` on the chat
 container instance and restyles each message Pi adds, after a first pass over
-the messages the chat already holds. Pi adds user messages only with
-`addChild`. Like the padding, the styling changes only instances: each
+the messages the chat already holds. Pi adds user messages and statuses only
+with `addChild`. Like the padding, the styling changes only instances: each
 restyled message gets its own `render`. `session_shutdown` restores the chat
 and the messages it still holds, except on quit.
 
@@ -101,6 +102,12 @@ reload, tree navigation); `findPromptThinkingLevel()` walks up from that entry
 to the nearest thinking level change, which Pi records at session start and on
 every change. A message sent in the current session has no id yet and gets the
 current level. The theme color of the level is read on every render.
+
+Pi shows a status as a spacer and a text component, and shows the next status
+in the same component while nothing else was added. Pi does not export the text
+class, so it is matched by its `build` method. Its `render`, and the one of the
+spacer before it, return no lines while the built text is the thinking level
+status.
 
 ## Routed Model
 
@@ -125,7 +132,7 @@ does; `PaddedFooter` therefore also matches the model part without it.
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.   |
 | `src/ui/padded-containers.ts` | Pi's chat, queued messages, widgets, dialogs moved by margins.  |
 | `src/ui/scrollbar-padding.ts` | Right padding for Pi's fullscreen `auto` scrollbar.             |
-| `src/ui/chat-messages.ts`     | User messages in the chat drawn as prompt boxes.                |
+| `src/ui/chat-messages.ts`     | User messages drawn as prompt boxes, thinking status hidden.    |
 | `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed. |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.   |
 | `src/terminal-background.ts`  | Terminal background, read from the terminal for the box.        |

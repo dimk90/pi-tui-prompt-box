@@ -1,14 +1,17 @@
 /**
- * Pi's chat messages restyled: user messages drawn as prompt boxes; see doc/ui.md.
+ * Pi's chat messages restyled: user messages drawn as prompt boxes, and Pi's thinking level status hidden;
+ * see doc/ui.md.
  */
 
 import { UserMessageComponent } from "@earendil-works/pi-coding-agent";
-import { type Component, Markdown } from "@earendil-works/pi-tui";
+import { type Component, Markdown, Spacer, stripTerminalSequences } from "@earendil-works/pi-tui";
 
 import type { ReadBoxColors } from "./colors.ts";
 import type { ParentComponent } from "./padded-containers.ts";
 import { BAR_WIDTH, INNER_PADDING, renderBoxRow } from "./prompt-box-editor.ts";
 
+// Pi's chat status after a thinking level change; the user message boxes show the level by their color
+const THINKING_LEVEL_STATUS = /^Thinking level: \S+$/;
 // The chat is already moved by the box margins
 const NO_MARGINS = { left: 0, right: 0 };
 // Fields of Pi's Markdown that draw the padding and the background of a user message
@@ -31,8 +34,9 @@ export interface ChatMessageStyle {
 /**
  * Restyles the messages of Pi's `chat` container: the ones it holds now and every one Pi adds later.
  *
- * User messages are drawn as prompt boxes, see {@link boxUserMessage}. Only the `chat` instance and the
- * message instances are changed, not their classes.
+ * User messages are drawn as prompt boxes, see {@link boxUserMessage}. Pi's thinking level status is hidden,
+ * see {@link hideThinkingLevelStatus}. Only the `chat` instance and the message instances are changed, not
+ * their classes.
  *
  * @returns A function that restores `chat` and the messages it still holds, or `undefined` when `chat` is
  *          already restyled.
@@ -42,16 +46,18 @@ export function styleChatMessages(chat: ParentComponent, style: ChatMessageStyle
 		return undefined;
 
 	const restoreFunctions = new WeakMap<Component, () => void>();
-	const styleMessage = (message: Component) => {
-		if (message instanceof UserMessageComponent)
-			restoreFunctions.set(message, boxUserMessage(message, style));
+	const styleMessage = (message: Component, previous: Component | undefined) => {
+		const restore = message instanceof UserMessageComponent
+			? boxUserMessage(message, style)
+			: hideThinkingLevelStatus(message, previous);
+		if (restore)
+			restoreFunctions.set(message, restore);
 	};
-	for (const message of chat.children)
-		styleMessage(message);
+	chat.children.forEach((message, index) => styleMessage(message, chat.children[index - 1]));
 
 	const addChild = chat.addChild.bind(chat);
 	chat.addChild = (message: Component): void => {
-		styleMessage(message);
+		styleMessage(message, chat.children.at(-1));
 		addChild(message);
 	};
 
@@ -153,6 +159,57 @@ function unpadMarkdown(markdown: Markdown): () => void {
 			Reflect.set(markdown, name, value);
 
 		markdown.invalidate();
+	};
+}
+
+/**
+ * Hides Pi's `Thinking level: <level>` chat status: the `status` text and the `spacer` Pi adds before it.
+ *
+ * Pi shows later statuses in the same text component, so the text is checked on every render and only the
+ * thinking level status is hidden. Pi does not export its status text class, so it is matched by its `build`
+ * method; other components are left unchanged.
+ *
+ * @returns A function that shows the status again, or `undefined` when `status` is not a status text.
+ */
+function hideThinkingLevelStatus(status: Component, spacer: Component | undefined): (() => void) | undefined {
+	if (!isStatusText(status))
+		return undefined;
+
+	const isHidden = () => THINKING_LEVEL_STATUS.test(stripTerminalSequences(status.build()).trim());
+	const showStatus = hideWhile(status, isHidden);
+	const showSpacer = spacer instanceof Spacer ? hideWhile(spacer, isHidden) : undefined;
+
+	return () => {
+		showStatus();
+		showSpacer?.();
+	};
+}
+
+/**
+ * Pi's status text, which builds its themed text on demand.
+ */
+interface StatusText extends Component {
+	build: () => string;
+}
+
+/**
+ * Checks if `component` has a `build` method, as Pi's status text has.
+ */
+function isStatusText(component: Component): component is StatusText {
+	return "build" in component && typeof component.build === "function";
+}
+
+/**
+ * Makes `component` render no lines while `isHidden()` returns `true`.
+ *
+ * @returns A function that removes the check.
+ */
+function hideWhile(component: Component, isHidden: () => boolean): () => void {
+	const render = component.render.bind(component);
+	component.render = (width: number): string[] => (isHidden() ? [] : render(width));
+
+	return () => {
+		Reflect.deleteProperty(component, "render");
 	};
 }
 

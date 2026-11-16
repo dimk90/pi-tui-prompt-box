@@ -85,6 +85,10 @@ below it. They have no status line, and no half row at the bottom edge.
 - The text keeps Pi's Markdown rendering and theme `userMessageText` color.
 - When the chat is too narrow for a box, the message is drawn as Pi draws it.
 
+Pi's chat status `Thinking level: <level>`, shown after a level change, is
+hidden, as the accent bar and the status line already show the level. Other
+statuses stay, also `Default thinking level: <level>`.
+
 ## Bash mode
 
 - Input starts with `!`: the accent bar uses Pi's bash mode color, and

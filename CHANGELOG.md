@@ -5,6 +5,7 @@
 ### New
 * `[ui]` Draw user messages in the chat as prompt boxes with the box background.
 * `[ui]` Color the accent bar of each user message with its prompt's thinking level.
+* `[ui]` Hide Pi's `Thinking level` chat status -> the boxes show the level by color.
 
 
 ## [0.1.1] - 12.11.2026

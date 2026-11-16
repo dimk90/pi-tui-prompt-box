@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { UserMessageComponent } from "@earendil-works/pi-coding-agent";
-import { Container, type MarkdownTheme, stripTerminalSequences, visibleWidth } from "@earendil-works/pi-tui";
+import {
+	type Component,
+	Container,
+	type MarkdownTheme,
+	Spacer,
+	stripTerminalSequences,
+	visibleWidth,
+} from "@earendil-works/pi-tui";
 
 import { type ChatMessageStyle, styleChatMessages } from "../src/ui/chat-messages.ts";
 import { RESET } from "../src/ui/colors.ts";
@@ -68,19 +75,35 @@ test("styleChatMessages keeps the box after Pi rebuilds the message, and Pi's lo
 	assert.ok(narrowLines.some((line) => line.includes(PI_BACKGROUND)));
 });
 
+test("styleChatMessages hides only the thinking level status and its spacer", () => {
+	const chat = new Container();
+	styleChatMessages(chat, createStyle());
+	let message = "Thinking level: high";
+	chat.addChild(new Spacer(1));
+	chat.addChild(createStatusText(() => `\x1b[2m${message}\x1b[0m`));
+	assert.deepEqual(chat.render(40), []);
+
+	// Pi shows the next status in the same component
+	message = "Default thinking level: high";
+	assert.deepEqual(chat.render(40).map(stripTerminalSequences), ["", message]);
+});
+
 test("styleChatMessages restores the chat and its messages", () => {
 	const chat = new Container();
 	const message = createUserMessage("text");
+	const status = createStatusText(() => "Thinking level: low");
 	const piLines = message.render(40);
 	chat.addChild(message);
 	const restore = styleChatMessages(chat, createStyle());
 	assert.ok(restore);
 	assert.equal(styleChatMessages(chat, createStyle()), undefined, "styled chats are not styled again");
+	chat.addChild(new Spacer(1));
+	chat.addChild(status);
 	chat.render(40);
 
 	restore();
 	assert.equal(Object.hasOwn(chat, "addChild"), false);
-	assert.deepEqual(chat.render(40), piLines);
+	assert.deepEqual(chat.render(40), [...piLines, "", "Thinking level: low"]);
 
 	const laterMessage = createUserMessage("later");
 	chat.addChild(laterMessage);
@@ -106,6 +129,26 @@ function setPlainTextStyle(message: UserMessageComponent): void {
 	const markdown = message.children[0];
 	assert.ok(markdown);
 	Reflect.set(markdown, "defaultTextStyle", { color: PLAIN, bgColor: (line: string) => `${PI_BACKGROUND}${line}\x1b[49m` });
+}
+
+/** Component like Pi's status text: one line built on every render, with `render` on the class as Pi has it. */
+class StatusText implements Component {
+	public readonly build: () => string;
+
+	constructor(build: () => string) {
+		this.build = build;
+	}
+
+	render(): string[] {
+		return [this.build()];
+	}
+
+	invalidate(): void {}
+}
+
+/** Creates a status text that shows the result of `build`. */
+function createStatusText(build: () => string): StatusText {
+	return new StatusText(build);
 }
 
 /** Returns the visible text of a rendered row without trailing spaces, with the test color tags kept. */
