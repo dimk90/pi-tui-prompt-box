@@ -79,8 +79,9 @@ below it. They have no status line, and no half row at the bottom edge.
 
 - The background and the text indent are the same as in the prompt box. Pi's
   theme `userMessageBg` color and `outputPad` setting are not used for them.
-- The accent bar has the theme color of the thinking level when the message is
-  added. It does not change when the level changes later.
+- The accent bar has the theme color of the thinking level the prompt was sent
+  with, so the session history shows the level of each prompt. It does not
+  change when the level changes later.
 - The text keeps Pi's Markdown rendering and theme `userMessageText` color.
 - When the chat is too narrow for a box, the message is drawn as Pi draws it.
 

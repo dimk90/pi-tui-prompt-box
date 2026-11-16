@@ -4,9 +4,10 @@
  * Usage: pi -e .
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import type { RgbColor, TUI } from "@earendil-works/pi-tui";
 
+import { findPromptThinkingLevel } from "./prompt-thinking-level.ts";
 import { findRoutedModel } from "./routed-model.ts";
 import { watchTerminalBackground } from "./terminal-background.ts";
 import { type ChatMessageStyle, styleChatMessages } from "./ui/chat-messages.ts";
@@ -16,6 +17,8 @@ import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
 import { readScrollbarPadding } from "./ui/scrollbar-padding.ts";
 import { formatStatus, readRoutedLevelColor } from "./ui/status-line.ts";
+
+type ThinkingLevel = Parameters<Theme["getThinkingBorderColor"]>[0];
 
 /**
  * Registers the prompt box editor for every session.
@@ -67,9 +70,12 @@ export default function promptBox(pi: ExtensionAPI): void {
 
 		restoreContainers = padPiContainers(editorTui, editor);
 
-		// A message keeps the level it was added with
-		const resolveBarColor: ChatMessageStyle["resolveBarColor"] = () => {
-			const level = pi.getThinkingLevel();
+		// A message sent in this session has no entry id yet and gets the current level
+		const resolveBarColor: ChatMessageStyle["resolveBarColor"] = (messageId) => {
+			const promptLevel = messageId ? findPromptThinkingLevel(ctx.sessionManager, messageId) : undefined;
+			// The session keeps levels as plain strings; Pi's theme draws an unknown level as `off`
+			const level = (promptLevel ?? pi.getThinkingLevel()) as ThinkingLevel;
+
 			return (text) => ctx.ui.theme.getThinkingBorderColor(level)(text);
 		};
 		const chat = findPiContainers(editorTui, editor)?.chat;

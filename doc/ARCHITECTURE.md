@@ -95,9 +95,12 @@ replaces the Markdown when the `outputPad` setting changes, so each render
 looks it up again. When it is not found, or below the box minimum width, the
 fields are set back and the message renders as Pi draws it.
 
-The accent bar color of a message is resolved once, when it is restyled, from
-the current thinking level. The theme color of the level is read on every
-render.
+The accent bar color of a message is resolved once, when it is restyled. Pi
+gives the session entry id to messages it renders from the session (resume,
+reload, tree navigation); `findPromptThinkingLevel()` walks up from that entry
+to the nearest thinking level change, which Pi records at session start and on
+every change. A message sent in the current session has no id yet and gets the
+current level. The theme color of the level is read on every render.
 
 ## Routed Model
 
@@ -117,6 +120,7 @@ does; `PaddedFooter` therefore also matches the model part without it.
 | ----------------------------- | --------------------------------------------------------------- |
 | `src/index.ts`                | Wiring: factory and the `session_start` handler.                |
 | `src/routed-model.ts`         | Routed model of a virtual model, read from the session branch.  |
+| `src/prompt-thinking-level.ts` | Thinking level of a past prompt, read from the session branch.  |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.    |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.   |
 | `src/ui/padded-containers.ts` | Pi's chat, queued messages, widgets, dialogs moved by margins.  |
@@ -211,6 +215,7 @@ Nothing is persisted. The editor keeps Pi's current status indicator. The
 extension keeps the functions that remove the container padding and the message
 styling, the function that stops watching the terminal background, and the last reported background.
 Model, thinking level, and routed model are read from the context at render time.
+Each user message box keeps the thinking level of its prompt.
 
 ## Required Invariants
 
