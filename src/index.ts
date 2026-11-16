@@ -9,8 +9,9 @@ import type { RgbColor, TUI } from "@earendil-works/pi-tui";
 
 import { findRoutedModel } from "./routed-model.ts";
 import { watchTerminalBackground } from "./terminal-background.ts";
+import { type ChatMessageStyle, styleChatMessages } from "./ui/chat-messages.ts";
 import { computeBoxColors, type ReadBoxColors } from "./ui/colors.ts";
-import { padPiContainers } from "./ui/padded-containers.ts";
+import { findPiContainers, padPiContainers } from "./ui/padded-containers.ts";
 import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
 import { readScrollbarPadding } from "./ui/scrollbar-padding.ts";
@@ -21,6 +22,7 @@ import { formatStatus, readRoutedLevelColor } from "./ui/status-line.ts";
  */
 export default function promptBox(pi: ExtensionAPI): void {
 	let restoreContainers: (() => void) | undefined;
+	let restoreChatMessages: (() => void) | undefined;
 	let stopWatchingBackground: (() => void) | undefined;
 
 	pi.on("session_start", (_event, ctx) => {
@@ -65,6 +67,15 @@ export default function promptBox(pi: ExtensionAPI): void {
 
 		restoreContainers = padPiContainers(editorTui, editor);
 
+		// A message keeps the level it was added with
+		const resolveBarColor: ChatMessageStyle["resolveBarColor"] = () => {
+			const level = pi.getThinkingLevel();
+			return (text) => ctx.ui.theme.getThinkingBorderColor(level)(text);
+		};
+		const chat = findPiContainers(editorTui, editor)?.chat;
+		if (chat)
+			restoreChatMessages = styleChatMessages(chat, { readBoxColors, resolveBarColor });
+
 		// Search before setFooter(): it removes the current footer from the tree before calling the factory
 		const builtInFooter = findBuiltInFooter(editorTui);
 		if (!builtInFooter)
@@ -82,11 +93,14 @@ export default function promptBox(pi: ExtensionAPI): void {
 		stopWatchingBackground?.();
 		stopWatchingBackground = undefined;
 
-		// Pi keeps its containers across extension reloads and session changes, so remove the padding for the
-		// next extension instance; on quit it stays, as Pi may still print the transcript
-		if (event.reason !== "quit")
+		// Pi keeps its containers across extension reloads and session changes, so remove the padding and the
+		// message styling for the next extension instance; on quit they stay, as Pi may still print the transcript
+		if (event.reason !== "quit") {
 			restoreContainers?.();
+			restoreChatMessages?.();
+		}
 
 		restoreContainers = undefined;
+		restoreChatMessages = undefined;
 	});
 }

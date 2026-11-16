@@ -20,8 +20,9 @@ const CHAT_INDEX = 2;
 /**
  * Component with child components, matched by shape like Pi's `Container`.
  */
-interface ParentComponent extends Component {
+export interface ParentComponent extends Component {
 	children: Component[];
+	addChild(component: Component): void;
 }
 
 /**
@@ -101,7 +102,9 @@ export function padComponent(
 /**
  * Pi's containers that get the padding.
  */
-interface PiContainers {
+export interface PiContainers {
+	/** Holds the messages of the session. */
+	chat: ParentComponent;
 	/** Chat, queued messages, and widgets above and below the editor. */
 	alwaysPadded: Component[];
 	/** Holds the editor, or a selector or extension dialog shown in its place. */
@@ -112,7 +115,7 @@ interface PiContainers {
  * Finds Pi's chat, queued messages, widget, and editor containers, or returns `undefined` when the tree has
  * another shape.
  */
-function findPiContainers(root: Component, editor: Component): PiContainers | undefined {
+export function findPiContainers(root: Component, editor: Component): PiContainers | undefined {
 	if (!isParent(root) || root.children.length !== ROOT_CHILD_COUNT) return undefined;
 	if (root.children.some((child) => !isParent(child))) return undefined;
 	const rootChildren = root.children as ParentComponent[];
@@ -125,7 +128,7 @@ function findPiContainers(root: Component, editor: Component): PiContainers | un
 	if (!chat || !isParent(chat)) return undefined;
 
 	const alwaysPadded = [chat, ...PADDED_ROOT_INDEXES.map((index) => rootChildren[index] as Component)];
-	return { alwaysPadded, editorContainer };
+	return { chat, alwaysPadded, editorContainer };
 }
 
 /**
@@ -136,8 +139,11 @@ function isPadded(component: Component): boolean {
 }
 
 /**
- * Checks if `component` has a `children` array, as Pi's `Container` has.
+ * Checks if `component` has a `children` array and an `addChild` method, as Pi's `Container` has.
  */
 function isParent(component: Component): component is ParentComponent {
-	return "children" in component && Array.isArray(component.children);
+	if (!("children" in component) || !Array.isArray(component.children))
+		return false;
+
+	return "addChild" in component && typeof component.addChild === "function";
 }
