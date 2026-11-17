@@ -10,11 +10,14 @@ repeating it.
 
 ```text
 session_start    → install PromptBoxEditor via setEditorComponent,
+                   load the config,
                    watch the terminal background,
                    pad Pi's chat, queued messages, widgets, and dialogs,
+                   restyle the chat messages unless the config turns it off,
                    wrap Pi's built-in footer in PaddedFooter via setFooter
 session_shutdown → stop watching the terminal background,
-                   remove the container padding, except on quit
+                   remove the container padding and the message styling,
+                   except on quit
 ```
 
 The editor factory passed to `setEditorComponent` runs when Pi builds the
@@ -74,6 +77,51 @@ stats line ends with it after at least two spaces. Otherwise the line stays
 unchanged, for example when Pi truncated it or changed its format. Custom
 footers from other extensions are never wrapped; hiding their parts is their job.
 
+## Config
+
+`loadConfigFile()` reads the global override file
+`<agent dir>/extensions/pi-tui-prompt-box.json` on every `session_start`, in
+TUI mode only, so a reload applies a changed file. The file holds overrides
+only and the extension never writes it. A missing file or key gives the
+default. An unreadable or invalid file, an invalid value, and an unknown key
+each give a warning through `ctx.ui.notify`, and the default is used.
+
+With `userMessageBoxes` set to `false`, `styleChatMessages()` is not called,
+so Pi's chat messages stay unchanged.
+
+## Chat Messages
+
+Pi gives extensions no way to change how it draws user messages and chat
+statuses. So `styleChatMessages()` sets its own `addChild` on the chat
+container instance and restyles each message Pi adds, after a first pass over
+the messages the chat already holds. Pi adds user messages and statuses only
+with `addChild`. Like the padding, the styling changes only instances: each
+restyled message gets its own `render`. `session_shutdown` restores the chat
+and the messages it still holds, except on quit.
+
+User messages ([ui.md](ui.md#user-messages)) are matched with `instanceof`, as
+Pi exports `UserMessageComponent`. Its Markdown child keeps rendering the text,
+so Pi's Markdown transforms and terminal prompt marks stay. The Markdown draws
+Pi's padding and background itself, so its `paddingX`, `paddingY`, and
+`defaultTextStyle` fields (private in Pi's types) are changed to render only
+the text lines, which `renderBoxRow()` then wraps like the editor rows. Pi
+replaces the Markdown when the `outputPad` setting changes, so each render
+looks it up again. When it is not found, or below the box minimum width, the
+fields are set back and the message renders as Pi draws it.
+
+The accent bar color of a message is resolved once, when it is restyled. Pi
+gives the session entry id to messages it renders from the session (resume,
+reload, tree navigation); `findPromptThinkingLevel()` walks up from that entry
+to the nearest thinking level change, which Pi records at session start and on
+every change. A message sent in the current session has no id yet and gets the
+current level. The theme color of the level is read on every render.
+
+Pi shows a status as a spacer and a text component, and shows the next status
+in the same component while nothing else was added. Pi does not export the text
+class, so it is matched by its `build` method. Its `render`, and the one of the
+spacer before it, return no lines while the built text is the thinking level
+status.
+
 ## Routed Model
 
 Under a virtual model, Pi's session knows the routed model: the physical model
@@ -91,11 +139,14 @@ does; `PaddedFooter` therefore also matches the model part without it.
 | Path                          | Responsibility                                                  |
 | ----------------------------- | --------------------------------------------------------------- |
 | `src/index.ts`                | Wiring: factory and the `session_start` handler.                |
+| `src/config.ts`               | Config: defaults and the global override file.                  |
 | `src/routed-model.ts`         | Routed model of a virtual model, read from the session branch.  |
+| `src/prompt-thinking-level.ts` | Thinking level of a past prompt, read from the session branch.  |
 | `src/ui/prompt-box-editor.ts` | `PromptBoxEditor`: box layout around the base editor output.    |
 | `src/ui/status-line.ts`       | Status line text: model, provider, thinking level, bash mode.   |
 | `src/ui/padded-containers.ts` | Pi's chat, queued messages, widgets, dialogs moved by margins.  |
 | `src/ui/scrollbar-padding.ts` | Right padding for Pi's fullscreen `auto` scrollbar.             |
+| `src/ui/chat-messages.ts`     | User messages drawn as prompt boxes, thinking status hidden.    |
 | `src/ui/padded-footer.ts`     | `PaddedFooter`: Pi's built-in footer moved, model part removed. |
 | `src/ui/colors.ts`            | ANSI codes of the box background; other colors use the theme.   |
 | `src/terminal-background.ts`  | Terminal background, read from the terminal for the box.        |
@@ -181,10 +232,11 @@ kinds are drawn in full, as is an indicator without a spinner frame.
 
 ## State
 
-Nothing is persisted. The editor keeps Pi's current status indicator. The
-extension keeps the function that removes the container padding, the function
-that stops watching the terminal background, and the last reported background.
+Nothing is persisted. The config is read at session start and not kept after it. The editor keeps Pi's current status indicator. The
+extension keeps the functions that remove the container padding and the message
+styling, the function that stops watching the terminal background, and the last reported background.
 Model, thinking level, and routed model are read from the context at render time.
+Each user message box keeps the thinking level of its prompt.
 
 ## Required Invariants
 
@@ -199,4 +251,7 @@ Model, thinking level, and routed model are read from the context at render time
 - Custom footers set by other extensions are never changed.
 - The content of padded containers stays Pi's: the padding only narrows and
   indents it, and passes mouse events in the container coordinates.
-- Pi's classes are never changed; only the padded container instances are.
+- The text of user messages stays Pi's: the box only replaces its padding and
+  background.
+- Pi's classes are never changed; only the padded container instances, the
+  chat container instance, and the restyled message instances are.

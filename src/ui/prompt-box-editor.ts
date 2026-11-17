@@ -23,8 +23,8 @@ import type { BashMode } from "./status-line.ts";
  */
 export const LEFT_MARGIN = 1;
 export const RIGHT_MARGIN = 0;
-const INNER_PADDING = 2;
-const BAR_WIDTH = 1;
+export const INNER_PADDING = 2;
+export const BAR_WIDTH = 1;
 // Pi's select list starts every item with a 2-column prefix (`→ ` or spaces); the list is moved left by it,
 // so the item text starts in the same column as the input text
 const SELECT_PREFIX_WIDTH = 2;
@@ -86,7 +86,7 @@ interface BoxMargins {
 /**
  * Shared look of the box rows of one render.
  */
-interface BoxStyle {
+export interface BoxStyle {
 	margins: BoxMargins;
 	barColor: (text: string) => string;
 	colors: BoxColors;
@@ -378,7 +378,7 @@ function renderHalfRow(barChar: string, fillChar: string, boxWidth: number, styl
  * Renders one full-height box row: accent bar, padding and content on the box background.
  * Content wider than `textWidth` extends into the right inner padding; only scroll indicators do that.
  */
-function renderBoxRow(content: string, textWidth: number, style: BoxStyle): string {
+export function renderBoxRow(content: string, textWidth: number, style: BoxStyle): string {
 	const { margins, barColor, colors } = style;
 	const leftMargin = " ".repeat(margins.left);
 	const rightMargin = " ".repeat(margins.right);

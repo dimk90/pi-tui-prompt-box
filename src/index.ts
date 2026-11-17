@@ -4,23 +4,29 @@
  * Usage: pi -e .
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import type { RgbColor, TUI } from "@earendil-works/pi-tui";
 
+import { getConfigFilePath, loadConfigFile } from "./config.ts";
+import { findPromptThinkingLevel } from "./prompt-thinking-level.ts";
 import { findRoutedModel } from "./routed-model.ts";
 import { watchTerminalBackground } from "./terminal-background.ts";
+import { type ChatMessageStyle, styleChatMessages } from "./ui/chat-messages.ts";
 import { computeBoxColors, type ReadBoxColors } from "./ui/colors.ts";
-import { padPiContainers } from "./ui/padded-containers.ts";
+import { findPiContainers, padPiContainers } from "./ui/padded-containers.ts";
 import { findBuiltInFooter, PaddedFooter } from "./ui/padded-footer.ts";
 import { PromptBoxEditor, type RenderStatus } from "./ui/prompt-box-editor.ts";
 import { readScrollbarPadding } from "./ui/scrollbar-padding.ts";
 import { formatStatus, readRoutedLevelColor } from "./ui/status-line.ts";
+
+type ThinkingLevel = Parameters<Theme["getThinkingBorderColor"]>[0];
 
 /**
  * Registers the prompt box editor for every session.
  */
 export default function promptBox(pi: ExtensionAPI): void {
 	let restoreContainers: (() => void) | undefined;
+	let restoreChatMessages: (() => void) | undefined;
 	let stopWatchingBackground: (() => void) | undefined;
 
 	pi.on("session_start", (_event, ctx) => {
@@ -58,12 +64,29 @@ export default function promptBox(pi: ExtensionAPI): void {
 		if (!editorTui || !editor)
 			return;
 
+		// Read on every session start, so a reload applies a changed file
+		const { config, warnings } = loadConfigFile(getConfigFilePath());
+		for (const warning of warnings)
+			ctx.ui.notify(warning, "warning");
+
 		stopWatchingBackground = watchTerminalBackground(editorTui, (background) => {
 			terminalBackground = background;
 			editorTui?.requestRender();
 		});
 
 		restoreContainers = padPiContainers(editorTui, editor);
+
+		// A message sent in this session has no entry id yet and gets the current level
+		const resolveBarColor: ChatMessageStyle["resolveBarColor"] = (messageId) => {
+			const promptLevel = messageId ? findPromptThinkingLevel(ctx.sessionManager, messageId) : undefined;
+			// The session keeps levels as plain strings; Pi's theme draws an unknown level as `off`
+			const level = (promptLevel ?? pi.getThinkingLevel()) as ThinkingLevel;
+
+			return (text) => ctx.ui.theme.getThinkingBorderColor(level)(text);
+		};
+		const chat = config.userMessageBoxes ? findPiContainers(editorTui, editor)?.chat : undefined;
+		if (chat)
+			restoreChatMessages = styleChatMessages(chat, { readBoxColors, resolveBarColor });
 
 		// Search before setFooter(): it removes the current footer from the tree before calling the factory
 		const builtInFooter = findBuiltInFooter(editorTui);
@@ -82,11 +105,14 @@ export default function promptBox(pi: ExtensionAPI): void {
 		stopWatchingBackground?.();
 		stopWatchingBackground = undefined;
 
-		// Pi keeps its containers across extension reloads and session changes, so remove the padding for the
-		// next extension instance; on quit it stays, as Pi may still print the transcript
-		if (event.reason !== "quit")
+		// Pi keeps its containers across extension reloads and session changes, so remove the padding and the
+		// message styling for the next extension instance; on quit they stay, as Pi may still print the transcript
+		if (event.reason !== "quit") {
 			restoreContainers?.();
+			restoreChatMessages?.();
+		}
 
 		restoreContainers = undefined;
+		restoreChatMessages = undefined;
 	});
 }
