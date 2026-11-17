@@ -13,7 +13,7 @@ REPO_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
 cd "$REPO_ROOT" || exit 1
 
 # shellcheck disable=SC1090
-source <(curl -fsSL https://dimk90.github.io/s-vhs/v0.7.0) && wait "$!" || exit 1
+source <(curl -fsSL https://dimk90.github.io/s-vhs/v0.7.1) && wait "$!" || exit 1
 
 
 ## Constants
@@ -28,9 +28,6 @@ PI_COMMAND+=' --use-theme dark'
 
 # Thinking levels after `off`, in the order shift+tab cycles through them
 THINKING_LEVELS=('minimal' 'low' 'medium' 'high' 'xhigh' 'max')
-
-# Background of the `asciinema` theme
-THEME_BACKGROUND='#121314'
 
 
 ## Configuration
@@ -58,13 +55,6 @@ Start
 ## Recording
 
 
-# TODO: remove for the new S-VHS version
-# The box background is derived from the background the terminal reports;
-# tmux reports black unless its window style names the theme background, and
-# passes that color on unchanged only to a recorder that takes 24-bit color
-Run "tmux set -w window-style 'bg=$THEME_BACKGROUND'"
-Run "tmux set -as terminal-features ',*:RGB'"
-
 # Bring pi up off camera, so the GIF opens on an idle TUI
 Run "$PI_COMMAND"
 Wait 'thinking off'
@@ -75,7 +65,7 @@ Sleep 2
 
 # Cycle the thinking levels; each one repaints the accent bar
 for level in "${THINKING_LEVELS[@]}"; do
-    Key 'BTab'
+    Key 'BTab'  # Shift+Tab
     Wait "· $level"
     Sleep 1
 done
