@@ -1,7 +1,7 @@
 # pi-tui-prompt-box
 
 <p align="center">
-  <img width="456" src="https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/d40318c625f33ef90f99108bb0536a8872174cab/doc/images/pi-tui-prompt-box.png" alt="pi-tui-prompt-box preview">
+  <img width="456" src="https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/e0ae300ca7aea2ed2d873e6c7d544951dc6b0564/doc/images/pi-tui-prompt-box.png" alt="pi-tui-prompt-box preview">
   <br>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
   <a href="https://pi.dev/packages/pi-tui-prompt-box"><img src="https://img.shields.io/badge/Pi-Package-6366F1?style=flat-square" alt="Pi Package"></a>
