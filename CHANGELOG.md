@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 18.11.2026
 
 ### New
 * `[ui]` Draw user messages in the chat as prompt boxes with the box background.
