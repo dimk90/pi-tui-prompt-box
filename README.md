@@ -20,9 +20,17 @@ with the prompt box. Their content and styling stay unchanged.
 It is a building block, not a full theme: combine it with your favorite footer,
 completion menu, or any other styling extension.
 
-## Demo
+## Demo: `Mode Colors`
 
-![Demo: thinking levels and bash mode](https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/530f3c8670c3c91c9f970a791509f21cdcedd79e/doc/images/demo.gif)
+The accent bar and spinner colors show the selected thinking level:
+
+![Demo: Mode Colors](https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/530f3c8670c3c91c9f970a791509f21cdcedd79e/doc/images/demo.gif)
+
+## Demo: `Message Colors`
+
+Each message in the chat keeps the color of the thinking level it was sent with:
+
+![Demo: Message Colors](https://media.githubusercontent.com/media/dimk90/pi-tui-prompt-box/442bc8dc44b4e230bd6f958024ac963476a8cc39/doc/images/user-messages.gif)
 
 ## Install
 
